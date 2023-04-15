@@ -1,0 +1,49 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String    @id @default(uuid())
+  name       String?   @db.VarChar(100)
+  email      String?   @unique
+  password   String?   @db.VarChar(255)
+  role       RoleUser  @relation(fields: [role_id], references: [id])
+  role_id    String
+  is_deleted Int
+  createdAt  DateTime  @default(now()) @map(name: "created_at")
+  updatedAt  DateTime  @updatedAt @map(name: "updated_at")
+  DataUrl    DataUrl[]
+
+  @@map(name: "users")
+}
+
+model RoleUser {
+  id   String  @id @default(uuid())
+  user User[]
+  name String? @db.VarChar(100)
+
+  @@map(name: "role_user")
+}
+
+model DataUrl {
+  id           String   @id @default(uuid())
+  title        String   @db.VarChar(2555)
+  destination  String
+  back_half    String   @db.VarChar(2555)
+  count_clicks Int
+  is_deleted   Int
+  user         User     @relation(fields: [user_id], references: [id])
+  user_id      String
+  createdAt    DateTime @default(now()) @map(name: "created_at")
+  updatedAt    DateTime @updatedAt @map(name: "updated_at")
+
+  @@map(name: "tbl_data_url")
+}
