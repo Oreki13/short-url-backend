@@ -11,10 +11,10 @@ datasource db {
 }
 
 model User {
-  id         String    @id @default(uuid())
-  name       String?   @db.VarChar(100)
-  email      String?   @unique
-  password   String?   @db.VarChar(255)
+  id         String    @id @unique @default(uuid())
+  name       String    @db.VarChar(100)
+  email      String    @unique
+  password   String    @db.VarChar(255)
   role       RoleUser  @relation(fields: [role_id], references: [id])
   role_id    String
   is_deleted Int
@@ -34,10 +34,10 @@ model RoleUser {
 }
 
 model DataUrl {
-  id           String   @id @default(uuid())
-  title        String   @db.VarChar(2555)
+  id           String   @id @unique @default(uuid())
+  title        String   @unique @db.VarChar(2555)
   destination  String
-  back_half    String   @db.VarChar(2555)
+  back_half    String   @unique @db.VarChar(2555)
   count_clicks Int
   is_deleted   Int
   user         User     @relation(fields: [user_id], references: [id])

@@ -1,10 +1,10 @@
 import express from 'express'
-import AuthHelper from '../helpers/auth'
-import ShortLinkController from '../controllers/short_link'
+import ShortLinkController from '../controller/short_link'
+import {authMiddleware} from "../middleware/auth_middleware";
 
 const router = express.Router()
-
-router.all("/*", AuthHelper.accessTokenCheck)
+// @ts-ignore
+router.use(authMiddleware);
 router.get("/user", ShortLinkController.getAll)
 router.post("/user", ShortLinkController.store)
 
