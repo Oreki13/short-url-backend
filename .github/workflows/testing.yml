@@ -27,8 +27,13 @@ jobs:
         uses: actions/setup-node@v1
         with:
             node-version: ${{matrix.node-version}}
-      - name: npm install
-        run: npm ci
+      - name: install dependencies
+        run: |
+          if [ -e package-lock.json ]; then
+          npm ci
+          else
+          npm i
+          fi
       - name: migrate database
         run: npx prisma migrate dev
         env:
