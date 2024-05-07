@@ -7,26 +7,35 @@ import {web} from "../src/application/web";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 
+function timeout(time: number) {
+    return new Promise(resolve => setTimeout(resolve, time));
+}
+
 export class ShortLinkTest {
     static async addMultipleData() {
         const data: Array<DataUrl> = []
+        const findUserId = await prismaClient.user.findUnique({
+            where: {
+                email: "superadmin@mail.com"
+            },
+            select: {
+                id: true,
+            }
+        })
 
         for (let i = 0; i < 10; i++) {
-            let currentTime = dayjs();
-            if (i == 9) {
-                currentTime = dayjs().add(5, "second");
-            }
             data.push({
                 id: uuidv4(),
-                user_id: "b111d9cd-71d8-4e51-aff1-8bc2384092b8",
+                user_id: findUserId!.id,
                 back_half: "test_unit_test_path_" + i.toString(),
                 destination: "https://google.com",
                 count_clicks: 0,
                 title: "test_unit_test " + i.toString(),
                 is_deleted: 0,
-                createdAt: currentTime.toDate(),
-                updatedAt: currentTime.toDate()
+                createdAt: dayjs().toDate(),
+                updatedAt: dayjs().toDate()
             })
+            await timeout(50);
         }
 
         await prismaClient.dataUrl.createMany({
@@ -101,10 +110,6 @@ export class UserTest {
         const data: Array<User> = []
 
         for (let i = 0; i < 10; i++) {
-            let currentTime = dayjs();
-            if (i == 9) {
-                currentTime = dayjs().add(5, "second");
-            }
             data.push({
                 id: uuidv4(),
                 name: "user_test_" + i,
@@ -112,9 +117,10 @@ export class UserTest {
                 password: password,
                 is_deleted: 0,
                 role_id: createRole.id,
-                createdAt: currentTime.toDate(),
-                updatedAt: currentTime.toDate()
+                createdAt: dayjs().toDate(),
+                updatedAt: dayjs().toDate()
             })
+            await timeout(50);
         }
 
         await prismaClient.user.createMany({
@@ -191,7 +197,5 @@ export class RoleUserTest {
                 id: true,
             }
         })
-
-
     }
 }
