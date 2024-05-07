@@ -35,7 +35,7 @@ jobs:
           npm i
           fi
       - name: migrate database
-        run: npx prisma migrate dev
+        run: npx prisma migrate deploy
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
           SECRET_KEY: Th1sS3cR3T
