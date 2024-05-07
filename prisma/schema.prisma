@@ -28,7 +28,7 @@ model User {
 model RoleUser {
   id   String  @id @default(uuid())
   user User[]
-  name String? @db.VarChar(100)
+  name String? @unique @db.VarChar(100)
 
   @@map(name: "role_user")
 }

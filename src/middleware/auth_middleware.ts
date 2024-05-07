@@ -2,13 +2,12 @@ import {Response, NextFunction} from "express";
 import jwt from "jsonwebtoken";
 import {defaultResponse} from "../model/basic_response_model";
 import {UserRequest} from "../type/user_request";
-import {logger} from "../application/logger";
 
 export const authMiddleware = async (req: UserRequest, res: Response, next: NextFunction) => {
     const authorization = req.headers.authorization
     const userId = req.headers['x-control-user']
     const secretKey = process.env.SECRET_KEY;
-    if (authorization !== null && userId !== null) {
+    if (authorization !== undefined && userId !== undefined) {
 
         if (authorization!.includes("Bearer")) {
 

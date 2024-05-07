@@ -27,7 +27,7 @@ describe("POST /auth/login", ()=>{
 
         logger.debug(response.body);
         expect(response.status).toBe(404)
-        expect(response.body.code).toBe("USER_UNREGISTERED")
+        expect(response.body.code).toBe("INVALID_CREDENTIAL")
     })
 
     it("should be invalid password", async ()=>{
@@ -40,7 +40,7 @@ describe("POST /auth/login", ()=>{
 
         logger.debug(response.body);
         expect(response.status).toBe(404)
-        expect(response.body.code).toBe("WRONG_PASSWORD")
+        expect(response.body.code).toBe("INVALID_CREDENTIAL")
     })
 
     it("should be success login", async ()=>{

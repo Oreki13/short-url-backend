@@ -1,11 +1,12 @@
 import {UserNameAndID} from "./user_model";
-import {LoginResponse} from "./auth_model";
 import {DefaultArgs, GetFindResult} from "prisma/prisma-client/runtime/library";
 import {Prisma} from "@prisma/client";
 
 export type ShortLinkGetAllRequest = {
-    page: number,
-    limit: number,
+    page: string,
+    limit: string,
+    keyword: string,
+    sort: "asc" | "desc",
 }
 
 export type ShortLinkGetAllResponse = {
@@ -57,4 +58,10 @@ export type ShortLinkStoreRequest = {
     title: string,
     destination: string,
     backHalf: string
+}
+
+export type ShortLinkUpdateRequest = {
+    title: string | undefined,
+    destination: string | undefined,
+    backHalf: string | undefined
 }

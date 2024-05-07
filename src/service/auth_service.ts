@@ -1,17 +1,20 @@
-import { HeaderAuthRequest, LoginRequest, LoginResponse, toLoginResponse} from "../model/auth_model";
+import {HeaderAuthRequest, LoginRequest, LoginResponse, toLoginResponse} from "../model/auth_model";
 import {Validation} from "../validation/validation";
-import {AuthValidation} from "../validation/auth-validation";
+import {Auth_validation} from "../validation/auth_validation";
 import {prismaClient} from "../application/database";
 import {ResponseError} from "../error/response_error";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import {BasicResponse, defaultResponse} from "../model/basic_response_model";
 
-export class AuthService {
+export class Auth_service {
     static async login(request: LoginRequest): Promise<LoginResponse> {
-        const loginRequest = Validation.validate(AuthValidation.LOGIN, request);
+        const loginRequest = Validation.validate(Auth_validation.LOGIN, request);
         const findUser = await prismaClient.user.findFirst({
-            where: {email: loginRequest.email},
+            where: {
+                email: loginRequest.email,
+                is_deleted: 0,
+            },
             select: {
                 id: true,
                 email: true,
@@ -21,13 +24,13 @@ export class AuthService {
         })
 
         if (findUser == null) {
-            throw new ResponseError(404, "USER_UNREGISTERED", "User not found")
+            throw new ResponseError(404, "INVALID_CREDENTIAL", "Credential is invalid")
         }
 
         const comparePassword = await bcrypt.compare(loginRequest.password, findUser.password!)
 
         if (!comparePassword) {
-            throw new ResponseError(404, "WRONG_PASSWORD", "Credential is invalid");
+            throw new ResponseError(404, "INVALID_CREDENTIAL", "Credential is invalid");
         }
 
         const secret = process.env.SECRET_KEY
@@ -37,7 +40,7 @@ export class AuthService {
     }
 
     static async verify(request: HeaderAuthRequest): Promise<BasicResponse> {
-        const headerRequest = Validation.validate(AuthValidation.TOKENHEADER, request)
+        const headerRequest = Validation.validate(Auth_validation.TOKENHEADER, request)
         const secretKey = process.env.SECRET_KEY;
         const accessToken = headerRequest.authorization?.split('Bearer')[1].trim()
         jwt.verify(accessToken!, secretKey!, (err, decoded: any) => {

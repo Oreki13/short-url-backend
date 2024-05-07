@@ -2,6 +2,7 @@ export type Paging = {
     size: number,
     current_page: number,
     total_page: number,
+    total_data: number,
 }
 
 export type Pageable<T> = {
