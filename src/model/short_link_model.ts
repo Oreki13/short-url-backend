@@ -12,7 +12,7 @@ export type ShortLinkGetAllRequest = {
 export type ShortLinkGetAllResponse = {
     id: string,
     title: string,
-    back_half: string,
+    path: string,
     count_clicks: number,
     destination: string,
     user: UserNameAndID
@@ -24,7 +24,7 @@ export const toShortLinkGetAllResponse = (data: GetFindResult<Prisma.$DataUrlPay
     take: number;
     select: {
         createdAt: boolean;
-        back_half: boolean;
+        path: boolean;
         destination: boolean;
         id: boolean;
         count_clicks: boolean;
@@ -39,7 +39,7 @@ export const toShortLinkGetAllResponse = (data: GetFindResult<Prisma.$DataUrlPay
     take: number;
     select: {
         createdAt: boolean;
-        back_half: boolean;
+        path: boolean;
         destination: boolean;
         id: boolean;
         count_clicks: boolean;
@@ -57,11 +57,11 @@ export const toShortLinkGetAllResponse = (data: GetFindResult<Prisma.$DataUrlPay
 export type ShortLinkStoreRequest = {
     title: string,
     destination: string,
-    backHalf: string
+    path: string
 }
 
 export type ShortLinkUpdateRequest = {
     title: string | undefined,
     destination: string | undefined,
-    backHalf: string | undefined
+    path: string | undefined
 }

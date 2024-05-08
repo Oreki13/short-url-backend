@@ -37,7 +37,7 @@ model DataUrl {
   id           String   @id @unique @default(uuid())
   title        String   @unique @db.VarChar(2555)
   destination  String
-  back_half    String   @unique @db.VarChar(2555)
+  path         String   @unique @db.VarChar(2555)
   count_clicks Int
   is_deleted   Int
   user         User     @relation(fields: [user_id], references: [id])
