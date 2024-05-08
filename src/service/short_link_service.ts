@@ -52,7 +52,7 @@ export class ShortLinkServices {
             select: {
                 id: true,
                 title: true,
-                back_half: true,
+                path: true,
                 count_clicks: true,
                 createdAt: true,
                 destination: true,
@@ -93,20 +93,20 @@ export class ShortLinkServices {
 
         const findDataUrl = await prismaClient.dataUrl.findFirst({
             where: {
-                back_half: request.backHalf,
+                path: request.path,
                 title: request.title,
                 is_deleted: 0,
             }
         })
 
         if (findDataUrl !== null) {
-            throw new ResponseError(400, "DATA_ALREADY_EXIST", "Title or backhalf has exist");
+            throw new ResponseError(400, "DATA_ALREADY_EXIST", "Title or path has exist");
         }
 
         const data: DataUrl = {
             id: id,
             user_id: userId?.toString()!,
-            back_half: request.backHalf,
+            path: request.path,
             destination: request.destination,
             count_clicks: 0,
             title: request.title,
@@ -125,14 +125,14 @@ export class ShortLinkServices {
             data: {
                 id: data.id,
                 title: data.title,
-                back_half: data.back_half,
+                path: data.path,
                 destination: data.destination
             }
         };
     }
 
     static async update(requestBody: ShortLinkUpdateRequest, shortLinkId: string): Promise<BasicResponse> {
-        const {title, destination, backHalf} = Validation.validate(ShortLinkValidation.UPDATE, requestBody);
+        const {title, destination, path} = Validation.validate(ShortLinkValidation.UPDATE, requestBody);
 
         const findDataUrl = await prismaClient.dataUrl.findUnique({
             where: {
@@ -152,7 +152,7 @@ export class ShortLinkServices {
             data: {
                 title: title ?? findDataUrl.title,
                 destination: destination ?? findDataUrl.destination,
-                back_half: backHalf ?? findDataUrl.back_half,
+                path: path ?? findDataUrl.path,
             }
         })
 
@@ -162,7 +162,7 @@ export class ShortLinkServices {
             data: {
                 id: updateData.id,
                 title: updateData.title,
-                back_half: updateData.back_half,
+                path: updateData.path,
                 destination: updateData.destination
             }
         };
@@ -197,7 +197,7 @@ export class ShortLinkServices {
             data: {
                 id: deleteData.id,
                 title: deleteData.title,
-                back_half: deleteData.back_half,
+                path: deleteData.path,
                 destination: deleteData.destination
             }
         };

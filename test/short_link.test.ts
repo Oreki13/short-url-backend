@@ -18,7 +18,7 @@ describe("POST /short/", () => {
             .send({
                 title: "",
                 destination: "",
-                backHalf: "",
+                path: "",
             });
 
         logger.debug(res.body);
@@ -43,7 +43,7 @@ describe("POST /short/", () => {
             .send({
                 title: "",
                 destination: "",
-                backHalf: "",
+                path: "",
             });
 
         logger.debug(response.body);
@@ -68,7 +68,7 @@ describe("POST /short/", () => {
             .send({
                 title: "test_unit_test",
                 destination: "https://google.com/",
-                backHalf: "tess",
+                path: "tess",
             });
 
         logger.debug(response.body);
@@ -93,7 +93,7 @@ describe("POST /short/", () => {
             .send({
                 title: "test_unit_test",
                 destination: "https://google.com/",
-                backHalf: "tess",
+                path: "tess",
             });
 
         logger.debug(response.body);

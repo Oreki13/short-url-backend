@@ -83,7 +83,7 @@ Request Body :
 {
   "title": "Link Google",
   "destination": "https://google.com",
-  "backHalf": "path"
+  "path": "path/"
 }
 ```
 
@@ -127,7 +127,7 @@ Response Body (Failed: Data already exist) (400) :
 {
   "status": "ERROR",
   "code": "DATA_ALREADY_EXIST",
-  "message": "Title or backhalf has exist",
+  "message": "Title or path has exist",
   "data": null
 }
 ```
@@ -183,7 +183,7 @@ Request Body :
 {
   "title": "Link Google Edit",
   "destination": "https://google.com",
-  "backHalf": "path"
+  "path": "path"
 }
 ```
 

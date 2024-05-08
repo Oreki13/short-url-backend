@@ -27,7 +27,7 @@ export class ShortLinkTest {
             data.push({
                 id: uuidv4(),
                 user_id: findUserId!.id,
-                back_half: "test_unit_test_path_" + i.toString(),
+                path: "test_unit_test_path_" + i.toString(),
                 destination: "https://google.com",
                 count_clicks: 0,
                 title: "test_unit_test " + i.toString(),
