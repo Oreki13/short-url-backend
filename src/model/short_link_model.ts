@@ -35,7 +35,7 @@ export const toShortLinkGetAllResponse = (data: GetFindResult<Prisma.$DataUrlPay
     orderBy: { createdAt: string };
     skip: number;
     where: { is_deleted: number; user_id: string }
-}>): GetFindResult<Prisma.$DataUrlPayload<DefaultArgs>, {
+}, GetFindResult<any, any, any>>): GetFindResult<Prisma.$DataUrlPayload<DefaultArgs>, {
     take: number;
     select: {
         createdAt: boolean;
@@ -50,7 +50,7 @@ export const toShortLinkGetAllResponse = (data: GetFindResult<Prisma.$DataUrlPay
     orderBy: { createdAt: string };
     skip: number;
     where: { is_deleted: number; user_id: string }
-}> => {
+}, any> => {
     return data;
 }
 

@@ -9,7 +9,7 @@ export const errorMiddleware = (error: Error, req: Request, res: Response<BasicR
             ...defaultResponse,
             status: "ERROR",
             code: "ERROR_VALIDATION",
-            message: JSON.stringify(error.message)
+            message: error.message
         })
     }
     if (error instanceof ResponseError) {

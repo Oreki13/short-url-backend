@@ -48,7 +48,7 @@ export const toUserGetAllResponse = (data: GetFindResult<Prisma.$UserPayload<Def
     orderBy: { createdAt: "asc" | "desc" };
     where: any;
     skip: number
-}>): GetFindResult<Prisma.$UserPayload<DefaultArgs>, {
+}, GetFindResult<any, any, any>>): GetFindResult<Prisma.$UserPayload<DefaultArgs>, {
     take: number;
     select: {
         createdAt: boolean;
@@ -61,6 +61,6 @@ export const toUserGetAllResponse = (data: GetFindResult<Prisma.$UserPayload<Def
     orderBy: { createdAt: "asc" | "desc" };
     where: any;
     skip: number
-}> => {
+}, any> => {
     return data;
 }

@@ -106,6 +106,7 @@ export class ShortLinkServices {
         const data: DataUrl = {
             id: id,
             user_id: userId?.toString()!,
+
             path: request.path,
             destination: request.destination,
             count_clicks: 0,
