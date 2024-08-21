@@ -1,6 +1,5 @@
 import {PrismaClient} from "@prisma/client";
 import {logger} from "./logger";
-import {Sentry} from "./web";
 
 export const prismaClient = new PrismaClient({
     log: [
