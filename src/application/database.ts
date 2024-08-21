@@ -22,7 +22,7 @@ export const prismaClient = new PrismaClient({
     ]
 });
 
-prismaClient.$on("error", (e)=> logger.error(e));
-prismaClient.$on("warn", (e)=> logger.warn(e));
-prismaClient.$on("query", (e)=> logger.info(e));
-prismaClient.$on("info", (e)=> logger.info(e));
+prismaClient.$on("error", (e)=> logger.error(JSON.stringify(e)));
+prismaClient.$on("warn", (e)=> logger.warn(JSON.stringify(e)));
+prismaClient.$on("query", (e)=> logger.info(JSON.stringify(e)));
+prismaClient.$on("info", (e)=> logger.info(JSON.stringify(e)));
