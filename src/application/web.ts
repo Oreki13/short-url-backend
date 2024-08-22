@@ -1,3 +1,4 @@
+require("./sentry");
 import express, {Express} from "express";
 import helmet from "helmet";
 import bodyParser from "body-parser";
@@ -5,11 +6,16 @@ import router from "../route/root";
 import {errorMiddleware} from "../middleware/error_middleware";
 import cors from "cors";
 
-export const web: Express = express();
+const Sentry = require("@sentry/node");
+
+const web: Express = express();
+if (process.env.NODE_ENV !== "test") {
+    Sentry.setupExpressErrorHandler(web);
+}
 
 web.use(cors(
     {
-        origin: 'http://localhost:3000',
+        origin: "*",
         methods: ['GET', 'POST', 'PUT', 'DELETE']
     }
 ));
@@ -22,3 +28,5 @@ web.use(
 web.use(bodyParser.json())
 web.use('/', router)
 web.use(errorMiddleware)
+
+export {web, Sentry}
