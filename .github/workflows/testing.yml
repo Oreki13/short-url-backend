@@ -6,14 +6,14 @@ jobs:
     name: njsscan code scanning
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: nodejsscan scan
         id: njsscan
         uses: ajinabraham/njsscan-action@master
         with:
           args: '. --sarif --output results.sarif || true'
       - name: Upload njsscan report
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: results.sarif
   test:
@@ -37,9 +37,9 @@ jobs:
         node-version: [20.x]
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Use NodeJS ${{matrix.node-version}}
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v4
         with:
             node-version: ${{matrix.node-version}}
       - name: install dependencies
