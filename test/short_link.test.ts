@@ -7,7 +7,7 @@ import {prismaClient} from "../src/application/database";
 
 describe("POST /short/", () => {
     afterAll(async () => {
-        await ShortLinkTest.deleteAddedShortLink();
+        await ShortLinkTest.deleteMultiple();
     })
 
     it("should be reject store if header is invalid", async () => {
@@ -100,6 +100,80 @@ describe("POST /short/", () => {
         expect(response.status).toBe(400)
         expect(response.body.status).toBe("ERROR")
         expect(response.body.code).toBe("DATA_ALREADY_EXIST")
+    })
+    it("should be failed store because title already exist", async () => {
+        const login = await supertest(web)
+            .post("/auth/login")
+            .send({
+                email: "superadmin@mail.com",
+                password: "123"
+            });
+        const decode: any = jwt.decode(login.body.data)
+
+        const response = await supertest(web)
+            .post("/short/")
+            .set("authorization", "Bearer " + login.body.data)
+            .set("x-control-user", decode!.id)
+            .send({
+                title: "test_unit_test",
+                destination: "https://google.com/",
+                path: "tess_2",
+            });
+
+        logger.info(response.body);
+        expect(response.status).toBe(400)
+        expect(response.body.status).toBe("ERROR")
+        expect(response.body.code).toBe("DATA_ALREADY_EXIST")
+    })
+
+    it("should be failed store because path already exist", async () => {
+        const login = await supertest(web)
+            .post("/auth/login")
+            .send({
+                email: "superadmin@mail.com",
+                password: "123"
+            });
+        const decode: any = jwt.decode(login.body.data)
+
+        const response = await supertest(web)
+            .post("/short/")
+            .set("authorization", "Bearer " + login.body.data)
+            .set("x-control-user", decode!.id)
+            .send({
+                title: "test_unit_test_2",
+                destination: "https://google.com/",
+                path: "tess",
+            });
+
+        logger.info(response.body);
+        expect(response.status).toBe(400)
+        expect(response.body.status).toBe("ERROR")
+        expect(response.body.code).toBe("DATA_ALREADY_EXIST")
+    })
+
+    it("should be success store other data", async () => {
+        const login = await supertest(web)
+            .post("/auth/login")
+            .send({
+                email: "superadmin@mail.com",
+                password: "123"
+            });
+        const decode: any = jwt.decode(login.body.data)
+
+        const response = await supertest(web)
+            .post("/short/")
+            .set("authorization", "Bearer " + login.body.data)
+            .set("x-control-user", decode!.id)
+            .send({
+                title: "test_unit_test_2",
+                destination: "https://google.com/",
+                path: "tess_2",
+            });
+
+        logger.info(response.body);
+        expect(response.status).toBe(200)
+        expect(response.body.status).toBe("OK")
+        expect(response.body.code).toBe("SUCCESS_ADD_LINK")
     })
 })
 

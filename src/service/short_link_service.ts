@@ -93,9 +93,15 @@ export class ShortLinkServices {
 
         const findDataUrl = await prismaClient.dataUrl.findFirst({
             where: {
-                path: request.path,
-                title: request.title,
-                is_deleted: 0,
+                OR: [
+                    {
+                        path: request.path,
+                        is_deleted: 0,
+                    }, {
+                        title: request.title,
+                        is_deleted: 0,
+                    }
+                ]
             }
         })
 
