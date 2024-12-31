@@ -354,7 +354,7 @@ describe("GET /short/", () => {
     })
 })
 
-describe("PATCH /short/:id", () => {
+describe("PUT /short/:id", () => {
     beforeAll(async () => {
         await ShortLinkTest.addMultipleData();
     })
@@ -364,7 +364,7 @@ describe("PATCH /short/:id", () => {
 
     it("Should be failed no header", async () => {
         const res = await supertest(web)
-            .patch("/short/tes")
+            .put("/short/tes")
 
         logger.debug(res.body);
         expect(res.status).toBe(401)
@@ -376,7 +376,7 @@ describe("PATCH /short/:id", () => {
         const {id, token} = await AuthUserTest.login("superadmin@mail.com");
 
         const res = await supertest(web)
-            .patch("/short/")
+            .put("/short/")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
 
@@ -388,7 +388,7 @@ describe("PATCH /short/:id", () => {
         const {id, token} = await AuthUserTest.login("superadmin@mail.com");
 
         const res = await supertest(web)
-            .patch("/short/tes")
+            .put("/short/tes")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
             .send({
@@ -417,7 +417,7 @@ describe("PATCH /short/:id", () => {
             .set("x-control-user", id)
 
         const res = await supertest(web)
-            .patch("/short/" + findData!.id)
+            .put("/short/" + findData!.id)
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
             .send({
@@ -441,7 +441,7 @@ describe("PATCH /short/:id", () => {
             }
         })
         const res = await supertest(web)
-            .patch("/short/" + findData!.id)
+            .put("/short/" + findData!.id)
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
             .send({
