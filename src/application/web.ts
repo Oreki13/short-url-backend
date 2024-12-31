@@ -16,7 +16,7 @@ if (process.env.NODE_ENV !== "test") {
 web.use(cors(
     {
         origin: "*",
-        methods: ['GET', 'POST', 'PUT', 'DELETE']
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     }
 ));
 web.use(helmet());

@@ -96,23 +96,48 @@ export class ShortLinkServices {
                 OR: [
                     {
                         path: request.path,
-                        is_deleted: 0,
                     }, {
                         title: request.title,
-                        is_deleted: 0,
                     }
-                ]
+                ],
             }
         })
 
-        if (findDataUrl !== null) {
+
+        if (findDataUrl !== null && findDataUrl.is_deleted === 0) {
             throw new ResponseError(400, "DATA_ALREADY_EXIST", "Title or path has exist");
+        }
+
+        if (findDataUrl !== null && findDataUrl.is_deleted === 1) {
+            await prismaClient.dataUrl.update({
+                where: {
+                    id: findDataUrl.id,
+                },
+                data: {
+                    title: request.title,
+                    destination: request.destination,
+                    path: request.path,
+                    is_deleted: 0,
+                    count_clicks: 0,
+                    createdAt: dayjs(Date.now()).toDate(),
+                    updatedAt: dayjs(Date.now()).toDate()
+                }
+            })
+            return {
+                ...defaultResponse,
+                code: "SUCCESS_ADD_LINK",
+                data: {
+                    id: findDataUrl.id,
+                    title: request.title,
+                    path: request.path,
+                    destination: request.destination,
+                }
+            };
         }
 
         const data: DataUrl = {
             id: id,
             user_id: userId?.toString()!,
-
             path: request.path,
             destination: request.destination,
             count_clicks: 0,

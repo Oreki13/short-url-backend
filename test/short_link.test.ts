@@ -542,5 +542,30 @@ describe("DELETE /short/:id", () => {
         expect(resAfterDelete.body.code).toBe("DATA_NOT_EXIST")
     })
 
+    it("should be success store deleted data", async () => {
+        const loginResponse = await supertest(web)
+            .post("/auth/login")
+            .send({
+                email: "superadmin@mail.com",
+                password: "123"
+            });
+        const decode: any = jwt.decode(loginResponse.body.data)
+
+        const response = await supertest(web)
+            .post("/short/")
+            .set("authorization", "Bearer " + loginResponse.body.data)
+            .set("x-control-user", decode!.id)
+            .send({
+                title: "test_unit_test 0",
+                destination: "https://google.com/",
+                path: "test_unit_test_path_0",
+            });
+
+        logger.debug(response.body);
+        expect(response.status).toBe(200)
+        expect(response.body.status).toBe("OK")
+        expect(response.body.code).toBe("SUCCESS_ADD_LINK")
+    })
+
 
 })
