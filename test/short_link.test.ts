@@ -354,7 +354,7 @@ describe("GET /short/", () => {
     })
 })
 
-describe("PATCH /short/:id", () => {
+describe("PUT /short/:id", () => {
     beforeAll(async () => {
         await ShortLinkTest.addMultipleData();
     })
@@ -364,7 +364,7 @@ describe("PATCH /short/:id", () => {
 
     it("Should be failed no header", async () => {
         const res = await supertest(web)
-            .patch("/short/tes")
+            .put("/short/tes")
 
         logger.debug(res.body);
         expect(res.status).toBe(401)
@@ -376,7 +376,7 @@ describe("PATCH /short/:id", () => {
         const {id, token} = await AuthUserTest.login("superadmin@mail.com");
 
         const res = await supertest(web)
-            .patch("/short/")
+            .put("/short/")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
 
@@ -388,7 +388,7 @@ describe("PATCH /short/:id", () => {
         const {id, token} = await AuthUserTest.login("superadmin@mail.com");
 
         const res = await supertest(web)
-            .patch("/short/tes")
+            .put("/short/tes")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
             .send({
@@ -417,7 +417,7 @@ describe("PATCH /short/:id", () => {
             .set("x-control-user", id)
 
         const res = await supertest(web)
-            .patch("/short/" + findData!.id)
+            .put("/short/" + findData!.id)
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
             .send({
@@ -441,7 +441,7 @@ describe("PATCH /short/:id", () => {
             }
         })
         const res = await supertest(web)
-            .patch("/short/" + findData!.id)
+            .put("/short/" + findData!.id)
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
             .send({
@@ -540,6 +540,31 @@ describe("DELETE /short/:id", () => {
         expect(resAfterDelete.status).toBe(404)
         expect(resAfterDelete.body.status).toBe("ERROR")
         expect(resAfterDelete.body.code).toBe("DATA_NOT_EXIST")
+    })
+
+    it("should be success store deleted data", async () => {
+        const loginResponse = await supertest(web)
+            .post("/auth/login")
+            .send({
+                email: "superadmin@mail.com",
+                password: "123"
+            });
+        const decode: any = jwt.decode(loginResponse.body.data)
+
+        const response = await supertest(web)
+            .post("/short/")
+            .set("authorization", "Bearer " + loginResponse.body.data)
+            .set("x-control-user", decode!.id)
+            .send({
+                title: "test_unit_test 0",
+                destination: "https://google.com/",
+                path: "test_unit_test_path_0",
+            });
+
+        logger.debug(response.body);
+        expect(response.status).toBe(200)
+        expect(response.body.status).toBe("OK")
+        expect(response.body.code).toBe("SUCCESS_ADD_LINK")
     })
 
 
