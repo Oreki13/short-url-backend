@@ -21,6 +21,7 @@ model User {
   createdAt  DateTime  @default(now()) @map(name: "created_at")
   updatedAt  DateTime  @updatedAt @map(name: "updated_at")
   DataUrl    DataUrl[]
+  tokens     Token[]
 
   @@map(name: "users")
 }
@@ -46,4 +47,19 @@ model DataUrl {
   updatedAt    DateTime @updatedAt @map(name: "updated_at")
 
   @@map(name: "tbl_data_url")
+}
+
+model Token {
+  id            String   @id @unique @default(uuid())
+  refresh_token String   @unique
+  is_revoked    Boolean  @default(false)
+  expires_at    DateTime
+  user          User     @relation(fields: [user_id], references: [id])
+  user_id       String
+  device_info   String?
+  ip_address    String?
+  createdAt     DateTime @default(now()) @map(name: "created_at")
+  updatedAt     DateTime @updatedAt @map(name: "updated_at")
+
+  @@map(name: "tokens")
 }

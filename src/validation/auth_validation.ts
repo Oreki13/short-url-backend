@@ -1,4 +1,4 @@
-import {z, ZodType} from "zod";
+import { z, ZodType } from "zod";
 
 export class Auth_validation {
     static readonly LOGIN: ZodType = z.object({
@@ -9,4 +9,12 @@ export class Auth_validation {
         authorization: z.string().min(1).max(350),
         "x-control-user": z.string().min(1).max(350),
     })
+
+    static readonly REFRESH_TOKEN = z.object({
+        refresh_token: z.string().min(1)
+    });
+
+    static readonly REVOKE_TOKEN = z.object({
+        refresh_token: z.string().min(1)
+    });
 }

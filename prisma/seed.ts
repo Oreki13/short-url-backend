@@ -1,14 +1,14 @@
-import {PrismaClient} from '@prisma/client'
+// import {PrismaClient} from '@prisma/client'
 
-const prisma = new PrismaClient()
+// const prisma = new PrismaClient()
 import bcrypt from 'bcrypt';
-import {prismaClient} from "../src/application/database";
+import { prismaClient } from "../src/application/database";
 
 async function main() {
     const salt = await bcrypt.genSalt(10)
     const password = await bcrypt.hash('123', salt);
-    const roleSuperAdmin = await prisma.roleUser.upsert({
-        where: {name: 'superAdmin'},
+    const roleSuperAdmin = await prismaClient.roleUser.upsert({
+        where: { name: 'superAdmin' },
         update: {},
         create: {
             name: "superAdmin",
@@ -16,31 +16,31 @@ async function main() {
     })
 
     const roleAdmin = await prismaClient.roleUser.upsert({
-        where:{
+        where: {
             name: "admin",
         },
-        update:{},
-        create:{
+        update: {},
+        create: {
             name: "admin",
         }
     });
 
     const roleUser = await prismaClient.roleUser.upsert({
-        where:{
+        where: {
             name: "user",
         },
-        update:{},
-        create:{
+        update: {},
+        create: {
             name: "user",
         }
     });
 
     await prismaClient.user.upsert({
-        where:{
+        where: {
             email: "admin@mail.com",
         },
-        update:{},
-        create:{
+        update: {},
+        create: {
             email: "admin@mail.com",
             name: "Admin",
             password: password,
@@ -50,11 +50,11 @@ async function main() {
     });
 
     await prismaClient.user.upsert({
-        where:{
+        where: {
             email: "user@mail.com",
         },
-        update:{},
-        create:{
+        update: {},
+        create: {
             email: "user@mail.com",
             name: "User",
             password: password,
@@ -63,8 +63,8 @@ async function main() {
         }
     });
 
-    await prisma.user.upsert({
-        where: {email: 'superadmin@mail.com'},
+    await prismaClient.user.upsert({
+        where: { email: 'superadmin@mail.com' },
         update: {},
         create: {
             email: "superadmin@mail.com",
@@ -77,9 +77,9 @@ async function main() {
 }
 
 main().then(async () => {
-    await prisma.$disconnect()
+    await prismaClient.$disconnect()
 }).catch(async (e) => {
     console.error(e)
-    await prisma.$disconnect()
+    await prismaClient.$disconnect()
     process.exit(1)
 })
