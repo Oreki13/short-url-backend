@@ -11,7 +11,7 @@ jobs:
         id: njsscan
         uses: ajinabraham/njsscan-action@master
         with:
-          args: '. --sarif --output results.sarif || true'
+          args: ". --sarif --output results.sarif || true"
       - name: Upload njsscan report
         uses: github/codeql-action/upload-sarif@v3
         with:
@@ -24,7 +24,7 @@ jobs:
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_USER: postgres
-          POSTGRES_DB: postgres
+          POSTGRES_DB: shorturl_test
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -41,7 +41,7 @@ jobs:
       - name: Use NodeJS ${{matrix.node-version}}
         uses: actions/setup-node@v4
         with:
-            node-version: ${{matrix.node-version}}
+          node-version: ${{matrix.node-version}}
       - name: install dependencies
         run: |
           if [ -e package-lock.json ]; then
@@ -50,19 +50,18 @@ jobs:
           npm i
           fi
       - name: migrate database
-        run: npx prisma migrate deploy
+        run: npm run db:test:reset
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/shorturl_test
           SECRET_KEY: Th1sS3cR3T
       - name: running seeder
-        run: npx prisma db seed
+        run: npm run db:test:seed
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/shorturl_test
           SECRET_KEY: Th1sS3cR3T
       - name: testing
         run: npm test
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/shorturl_test
           SECRET_KEY: Th1sS3cR3T
           NODE_ENV: test
-

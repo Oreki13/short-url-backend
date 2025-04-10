@@ -1,9 +1,9 @@
-import {prismaClient} from "../src/application/database";
-import {DataUrl, User} from "@prisma/client";
+import { prismaClient } from "../src/application/database";
+import { DataUrl, User } from "@prisma/client";
 import dayjs from "dayjs";
-import {v4 as uuidv4} from "uuid";
+import { v4 as uuidv4 } from "uuid";
 import supertest from "supertest";
-import {web} from "../src/application/web";
+import { web } from "../src/application/web";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 
@@ -89,10 +89,10 @@ export class AuthUserTest {
                 email: email,
                 password: "123"
             });
-        const decode: any = jwt.decode(login.body.data)
+        const decode: any = jwt.decode(login.body.data.access_token)
         return {
             id: decode!.id,
-            token: login.body.data,
+            token: login.body.data.access_token,
         }
     }
 }

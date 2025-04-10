@@ -1,9 +1,9 @@
 import supertest from "supertest";
-import {web} from "../src/application/web";
-import {logger} from "../src/application/logger";
+import { web } from "../src/application/web";
+import { logger } from "../src/application/logger";
 import jwt from "jsonwebtoken";
-import {AuthUserTest, ShortLinkTest} from "./test_util";
-import {prismaClient} from "../src/application/database";
+import { AuthUserTest, ShortLinkTest } from "./test_util";
+import { prismaClient } from "../src/application/database";
 
 describe("POST /short/", () => {
     afterAll(async () => {
@@ -34,11 +34,11 @@ describe("POST /short/", () => {
                 email: "superadmin@mail.com",
                 password: "123"
             });
-        const decode: any = jwt.decode(loginResponse.body.data)
+        const decode: any = jwt.decode(loginResponse.body.data.access_token)
 
         const response = await supertest(web)
             .post("/short/")
-            .set("authorization", "Bearer " + loginResponse.body.data)
+            .set("authorization", "Bearer " + loginResponse.body.data.access_token)
             .set("x-control-user", decode!.id)
             .send({
                 title: "",
@@ -59,11 +59,11 @@ describe("POST /short/", () => {
                 email: "superadmin@mail.com",
                 password: "123"
             });
-        const decode: any = jwt.decode(loginResponse.body.data)
+        const decode: any = jwt.decode(loginResponse.body.data.access_token)
 
         const response = await supertest(web)
             .post("/short/")
-            .set("authorization", "Bearer " + loginResponse.body.data)
+            .set("authorization", "Bearer " + loginResponse.body.data.access_token)
             .set("x-control-user", decode!.id)
             .send({
                 title: "test_unit_test",
@@ -84,11 +84,11 @@ describe("POST /short/", () => {
                 email: "superadmin@mail.com",
                 password: "123"
             });
-        const decode: any = jwt.decode(login.body.data)
+        const decode: any = jwt.decode(login.body.data.access_token)
 
         const response = await supertest(web)
             .post("/short/")
-            .set("authorization", "Bearer " + login.body.data)
+            .set("authorization", "Bearer " + login.body.data.access_token)
             .set("x-control-user", decode!.id)
             .send({
                 title: "test_unit_test",
@@ -108,11 +108,11 @@ describe("POST /short/", () => {
                 email: "superadmin@mail.com",
                 password: "123"
             });
-        const decode: any = jwt.decode(login.body.data)
+        const decode: any = jwt.decode(login.body.data.access_token)
 
         const response = await supertest(web)
             .post("/short/")
-            .set("authorization", "Bearer " + login.body.data)
+            .set("authorization", "Bearer " + login.body.data.access_token)
             .set("x-control-user", decode!.id)
             .send({
                 title: "test_unit_test",
@@ -133,11 +133,11 @@ describe("POST /short/", () => {
                 email: "superadmin@mail.com",
                 password: "123"
             });
-        const decode: any = jwt.decode(login.body.data)
+        const decode: any = jwt.decode(login.body.data.access_token)
 
         const response = await supertest(web)
             .post("/short/")
-            .set("authorization", "Bearer " + login.body.data)
+            .set("authorization", "Bearer " + login.body.data.access_token)
             .set("x-control-user", decode!.id)
             .send({
                 title: "test_unit_test_2",
@@ -158,11 +158,11 @@ describe("POST /short/", () => {
                 email: "superadmin@mail.com",
                 password: "123"
             });
-        const decode: any = jwt.decode(login.body.data)
+        const decode: any = jwt.decode(login.body.data.access_token)
 
         const response = await supertest(web)
             .post("/short/")
-            .set("authorization", "Bearer " + login.body.data)
+            .set("authorization", "Bearer " + login.body.data.access_token)
             .set("x-control-user", decode!.id)
             .send({
                 title: "test_unit_test_2",
@@ -202,7 +202,7 @@ describe("GET /short/", () => {
     })
 
     it("should be success get with 5 limit and page 1", async () => {
-        const {id, token} = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
         const res = await supertest(web)
             .get("/short/")
             .set("authorization", "Bearer " + token)
@@ -223,7 +223,7 @@ describe("GET /short/", () => {
     })
 
     it("should be success get with 5 limit and page 2", async () => {
-        const {id, token} = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
         const res = await supertest(web)
             .get("/short/")
             .set("authorization", "Bearer " + token)
@@ -244,7 +244,7 @@ describe("GET /short/", () => {
     })
 
     it("should be success get with 10 limit and page 1", async () => {
-        const {id, token} = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
         const res = await supertest(web)
             .get("/short/")
             .set("authorization", "Bearer " + token)
@@ -265,7 +265,7 @@ describe("GET /short/", () => {
     })
 
     it("should be success get with 10 limit and page 2", async () => {
-        const {id, token} = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
         const res = await supertest(web)
             .get("/short/")
             .set("authorization", "Bearer " + token)
@@ -286,7 +286,7 @@ describe("GET /short/", () => {
     })
 
     it("should be success search title", async () => {
-        const {id, token} = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
         const res = await supertest(web)
             .get("/short/")
             .set("authorization", "Bearer " + token)
@@ -308,7 +308,7 @@ describe("GET /short/", () => {
     })
 
     it("should be success sort asc", async () => {
-        const {id, token} = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
         const res = await supertest(web)
             .get("/short/")
             .set("authorization", "Bearer " + token)
@@ -331,7 +331,7 @@ describe("GET /short/", () => {
     })
 
     it("should be success sort desc", async () => {
-        const {id, token} = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
         const res = await supertest(web)
             .get("/short/")
             .set("authorization", "Bearer " + token)
@@ -373,7 +373,7 @@ describe("PUT /short/:id", () => {
     })
 
     it("Should be failed no param send on endpoint", async () => {
-        const {id, token} = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
 
         const res = await supertest(web)
             .put("/short/")
@@ -385,7 +385,7 @@ describe("PUT /short/:id", () => {
     })
 
     it("Should be failed no data found", async () => {
-        const {id, token} = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
 
         const res = await supertest(web)
             .put("/short/tes")
@@ -402,7 +402,7 @@ describe("PUT /short/:id", () => {
     })
 
     it("Should be failed no data found because deleted", async () => {
-        const {id, token} = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
         const findData = await prismaClient.dataUrl.findUnique({
             where: {
                 title: "test_unit_test 1"
@@ -431,7 +431,7 @@ describe("PUT /short/:id", () => {
     })
 
     it("Should be success edited", async () => {
-        const {id, token} = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
         const findData = await prismaClient.dataUrl.findUnique({
             where: {
                 title: "test_unit_test 0"
@@ -485,7 +485,7 @@ describe("DELETE /short/:id", () => {
     })
 
     it("Should be failed no param send on endpoint", async () => {
-        const {id, token} = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
 
         const res = await supertest(web)
             .delete("/short/")
@@ -497,7 +497,7 @@ describe("DELETE /short/:id", () => {
     })
 
     it("Should be failed no data found", async () => {
-        const {id, token} = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
 
         const res = await supertest(web)
             .delete("/short/tes")
@@ -511,7 +511,7 @@ describe("DELETE /short/:id", () => {
     })
 
     it("Should be success delete data", async () => {
-        const {id, token} = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
         const findData = await prismaClient.dataUrl.findUnique({
             where: {
                 title: "test_unit_test 0"
@@ -549,11 +549,11 @@ describe("DELETE /short/:id", () => {
                 email: "superadmin@mail.com",
                 password: "123"
             });
-        const decode: any = jwt.decode(loginResponse.body.data)
+        const decode: any = jwt.decode(loginResponse.body.data.access_token)
 
         const response = await supertest(web)
             .post("/short/")
-            .set("authorization", "Bearer " + loginResponse.body.data)
+            .set("authorization", "Bearer " + loginResponse.body.data.access_token)
             .set("x-control-user", decode!.id)
             .send({
                 title: "test_unit_test 0",
