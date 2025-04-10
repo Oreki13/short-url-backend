@@ -1,12 +1,11 @@
 require("./sentry");
-import express, {Express} from "express";
+import express, { Express } from "express";
 import helmet from "helmet";
 import bodyParser from "body-parser";
 import router from "../route/root";
-import {errorMiddleware} from "../middleware/error_middleware";
+import { errorMiddleware } from "../middleware/error_middleware";
 import cors from "cors";
-
-const Sentry = require("@sentry/node");
+import { Sentry } from "./sentry";
 
 const web: Express = express();
 if (process.env.NODE_ENV !== "test") {
@@ -29,4 +28,4 @@ web.use(bodyParser.json())
 web.use('/', router)
 web.use(errorMiddleware)
 
-export {web, Sentry}
+export { web, Sentry }
