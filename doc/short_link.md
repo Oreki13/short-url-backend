@@ -1,13 +1,16 @@
 # Short Link API Spec
 
 ## Get all list short link
-Endpoint : GET /short/
+
+Endpoint : GET /v1/short/
 
 Request Header :
+
 - authorization : token
 - x-control-user : userID
 
 Request Body :
+
 ```json
 {
   "page": "1",
@@ -51,6 +54,7 @@ Response Body :
 ```
 
 Response Body (Failed: Unauthorized)(401) :
+
 ```json
 {
   "status": "ERROR",
@@ -61,6 +65,7 @@ Response Body (Failed: Unauthorized)(401) :
 ```
 
 Response Body (Failed: Error Validation) (400) :
+
 ```json
 {
   "status": "ERROR",
@@ -72,13 +77,15 @@ Response Body (Failed: Error Validation) (400) :
 
 ## Create Short Link
 
-Endpoint : POST /short/
+Endpoint : POST /v1/short/
 
 Request Header :
+
 - authorization : token
 - x-control-user : userID
 
 Request Body :
+
 ```json
 {
   "title": "Link Google",
@@ -88,6 +95,7 @@ Request Body :
 ```
 
 Response Body (Success) :
+
 ```json
 {
   "status": "OK",
@@ -103,6 +111,7 @@ Response Body (Success) :
 ```
 
 Response Body (Failed: Unauthorized)(401) :
+
 ```json
 {
   "status": "ERROR",
@@ -113,6 +122,7 @@ Response Body (Failed: Unauthorized)(401) :
 ```
 
 Response Body (Failed: Error Validation) (400) :
+
 ```json
 {
   "status": "ERROR",
@@ -123,6 +133,7 @@ Response Body (Failed: Error Validation) (400) :
 ```
 
 Response Body (Failed: Data already exist) (400) :
+
 ```json
 {
   "status": "ERROR",
@@ -134,13 +145,15 @@ Response Body (Failed: Data already exist) (400) :
 
 ## Delete Short Link
 
-Endpoint : DELETE /short/:id
+Endpoint : DELETE /v1/short/:id
 
 Request Header :
+
 - authorization : token
 - x-control-user : userID
 
 Response Body (Success) :
+
 ```json
 {
   "status": "OK",
@@ -151,6 +164,7 @@ Response Body (Success) :
 ```
 
 Response Body (Failed: Unauthorized)(401) :
+
 ```json
 {
   "status": "ERROR",
@@ -161,6 +175,7 @@ Response Body (Failed: Unauthorized)(401) :
 ```
 
 Response Body (Failed: User not Exist) (404) :
+
 ```json
 {
   "status": "ERROR",
@@ -172,13 +187,14 @@ Response Body (Failed: User not Exist) (404) :
 
 ## Edit Short Link
 
-Endpoint : PATCH /short/:id
-
+Endpoint : PUT /v1/short/:id
 Request Header :
+
 - authorization : token
 - x-control-user : userID
 
 Request Body :
+
 ```json
 {
   "title": "Link Google Edit",
@@ -187,8 +203,8 @@ Request Body :
 }
 ```
 
-
 Response Body (Success) :
+
 ```json
 {
   "status": "OK",
@@ -202,7 +218,9 @@ Response Body (Success) :
   }
 }
 ```
+
 Response Body (Failed: Unauthorized)(401) :
+
 ```json
 {
   "status": "ERROR",
@@ -213,6 +231,7 @@ Response Body (Failed: Unauthorized)(401) :
 ```
 
 Response Body (Failed: Error Validation) (400) :
+
 ```json
 {
   "status": "ERROR",
@@ -223,6 +242,7 @@ Response Body (Failed: Error Validation) (400) :
 ```
 
 Response Body (Failed: User not Exist) (404) :
+
 ```json
 {
   "status": "ERROR",
