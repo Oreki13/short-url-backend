@@ -6,6 +6,7 @@ import router from "../route/root";
 import { errorMiddleware } from "../middleware/error_middleware";
 import cors from "cors";
 import { Sentry } from "./sentry";
+import ErrorController from "../controller/error";
 
 const web: Express = express();
 if (process.env.NODE_ENV !== "test") {
@@ -26,6 +27,7 @@ web.use(
 );
 web.use(bodyParser.json())
 web.use('/', router)
+web.use(ErrorController.notFoundHandler)
 web.use(errorMiddleware)
 
 export { web, Sentry }

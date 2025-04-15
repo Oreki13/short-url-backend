@@ -69,10 +69,10 @@ describe('Auth API', () => {
         await prismaClient.$disconnect();
     });
 
-    describe('POST /auth/login', () => {
+    describe('POST /v1/auth/login', () => {
         it('should return 200 and tokens when login is successful', async () => {
             const response = await request(web)
-                .post('/auth/login')
+                .post('/v1/auth/login')
                 .send({
                     email: testUser.email,
                     password: testUser.password
@@ -91,7 +91,7 @@ describe('Auth API', () => {
 
         it('should return 404 when credentials are invalid', async () => {
             const response = await request(web)
-                .post('/auth/login')
+                .post('/v1/auth/login')
                 .send({
                     email: testUser.email,
                     password: 'wrongpassword'
@@ -103,7 +103,7 @@ describe('Auth API', () => {
 
         it('should return 400 when email is invalid format', async () => {
             const response = await request(web)
-                .post('/auth/login')
+                .post('/v1/auth/login')
                 .send({
                     email: 'invalid-email',
                     password: testUser.password
@@ -113,10 +113,10 @@ describe('Auth API', () => {
         });
     });
 
-    describe('GET /auth/verify', () => {
+    describe('GET /v1/auth/verify', () => {
         it('should return 200 when token is valid', async () => {
             const response = await request(web)
-                .get('/auth/verify')
+                .get('/v1/auth/verify')
                 .set('Authorization', `Bearer ${accessToken}`)
                 .set('x-control-user', testUser.id);
 
@@ -125,7 +125,7 @@ describe('Auth API', () => {
 
         it('should return 401 when token is invalid', async () => {
             const response = await request(web)
-                .get('/auth/verify')
+                .get('/v1/auth/verify')
                 .set('Authorization', 'Bearer invalidtoken')
                 .set('x-control-user', testUser.id);
 
@@ -135,7 +135,7 @@ describe('Auth API', () => {
 
         it('should return 401 when user id does not match', async () => {
             const response = await request(web)
-                .get('/auth/verify')
+                .get('/v1/auth/verify')
                 .set('Authorization', `Bearer ${accessToken}`)
                 .set('x-control-user', 'invalid-user-id');
 
@@ -144,10 +144,10 @@ describe('Auth API', () => {
         });
     });
 
-    describe('POST /auth/refresh-token', () => {
+    describe('POST /v1/auth/refresh-token', () => {
         it('should return new access token when refresh token is valid', async () => {
             const response = await request(web)
-                .post('/auth/refresh-token')
+                .post('/v1/auth/refresh-token')
                 .send({
                     refresh_token: refreshToken
                 });
@@ -163,7 +163,7 @@ describe('Auth API', () => {
 
         it('should return 401 when refresh token is invalid', async () => {
             const response = await request(web)
-                .post('/auth/refresh-token')
+                .post('/v1/auth/refresh-token')
                 .send({
                     refresh_token: 'invalid-refresh-token'
                 });
@@ -173,11 +173,11 @@ describe('Auth API', () => {
         });
     });
 
-    describe('POST /auth/revoke-token', () => {
+    describe('POST /v1/auth/revoke-token', () => {
         it('should return 200 when token is revoked successfully', async () => {
             // First get a new refresh token via login
             const loginResponse = await request(web)
-                .post('/auth/login')
+                .post('/v1/auth/login')
                 .send({
                     email: testUser.email,
                     password: testUser.password
@@ -186,7 +186,7 @@ describe('Auth API', () => {
             const tokenToRevoke = loginResponse.body.data.refresh_token;
 
             const response = await request(web)
-                .post('/auth/revoke-token')
+                .post('/v1/auth/revoke-token')
                 .send({
                     refresh_token: tokenToRevoke
                 });
@@ -197,7 +197,7 @@ describe('Auth API', () => {
 
         it('should return 404 when token is not found', async () => {
             const response = await request(web)
-                .post('/auth/revoke-token')
+                .post('/v1/auth/revoke-token')
                 .send({
                     refresh_token: 'non-existent-token'
                 });
@@ -207,10 +207,10 @@ describe('Auth API', () => {
         });
     });
 
-    describe('POST /auth/logout', () => {
+    describe('POST /v1/auth/logout', () => {
         it('should return 200 when logout is successful', async () => {
             const response = await request(web)
-                .post('/auth/logout')
+                .post('/v1/auth/logout')
                 .set('Authorization', `Bearer ${accessToken}`);
 
             expect(response.status).toBe(200);
@@ -219,7 +219,7 @@ describe('Auth API', () => {
 
         it('should return 401 when no authorization header is provided', async () => {
             const response = await request(web)
-                .post('/auth/logout');
+                .post('/v1/auth/logout');
 
             expect(response.status).toBe(401);
             expect(response.body.code).toBe('UNAUTHORIZED');
@@ -227,7 +227,7 @@ describe('Auth API', () => {
 
         it('should return 500 when token is invalid', async () => {
             const response = await request(web)
-                .post('/auth/logout')
+                .post('/v1/auth/logout')
                 .set('Authorization', 'Bearer invalid-token');
 
             expect(response.status).toBe(500);
@@ -239,7 +239,7 @@ describe('Auth API', () => {
             // Login 6 times to exceed the limit of 5 tokens
             for (let i = 0; i < 6; i++) {
                 await request(web)
-                    .post('/auth/login')
+                    .post('/v1/auth/login')
                     .send({
                         email: testUser.email,
                         password: testUser.password

@@ -2,13 +2,15 @@
 
 ## Create User
 
-Endpoint : POST /user/create
+Endpoint : POST /v1/user/create
 
 Request Header :
+
 - authorization : token
 - x-control-user : userID
 
 Request Body :
+
 ```json
 {
   "name": "fandy",
@@ -19,6 +21,7 @@ Request Body :
 ```
 
 Response Body (Success) :
+
 ```json
 {
   "status": "OK",
@@ -36,6 +39,7 @@ Response Body (Success) :
 ```
 
 Response Body (Failed: Unauthorized)(401) :
+
 ```json
 {
   "status": "ERROR",
@@ -46,6 +50,7 @@ Response Body (Failed: Unauthorized)(401) :
 ```
 
 Response Body (Failed: Error Validation) (400) :
+
 ```json
 {
   "status": "ERROR",
@@ -56,6 +61,7 @@ Response Body (Failed: Error Validation) (400) :
 ```
 
 Response Body (Failed: User Exist) (400) :
+
 ```json
 {
   "status": "ERROR",
@@ -66,6 +72,7 @@ Response Body (Failed: User Exist) (400) :
 ```
 
 Response Body (Failed: Role not Exist) (400) :
+
 ```json
 {
   "status": "ERROR",
@@ -76,6 +83,7 @@ Response Body (Failed: Role not Exist) (400) :
 ```
 
 Response Body (Failed: Unauthorized) (401) :
+
 ```json
 {
   "status": "ERROR",
@@ -87,9 +95,10 @@ Response Body (Failed: Unauthorized) (401) :
 
 ## Login User
 
-Endpoint : POST /auth/login
+Endpoint : POST /v1/auth/login
 
 Request Body :
+
 ```json
 {
   "email": "fandy@mail.com",
@@ -98,6 +107,7 @@ Request Body :
 ```
 
 Response Body (Success) (200) :
+
 ```json
 {
   "status": "OK",
@@ -108,6 +118,7 @@ Response Body (Success) (200) :
 ```
 
 Response Body (Failed: Invalid credential) (404) :
+
 ```json
 {
   "status": "ERROR",
@@ -118,6 +129,7 @@ Response Body (Failed: Invalid credential) (404) :
 ```
 
 Response Body (Failed: Error Validation) (400) :
+
 ```json
 {
   "status": "ERROR",
@@ -129,13 +141,15 @@ Response Body (Failed: Error Validation) (400) :
 
 ## Get List User
 
-Endpoint : GET /user/
+Endpoint : GET /v1/user/
 
 Request Header :
+
 - authorization : token
 - x-control-user : userID
 
 Request Body :
+
 ```json
 {
   "page": "1",
@@ -146,6 +160,7 @@ Request Body :
 ```
 
 Response Body (Success) :
+
 ```json
 {
   "status": "OK",
@@ -175,6 +190,7 @@ Response Body (Success) :
 ```
 
 Response Body (Failed: Unauthorized) (401) :
+
 ```json
 {
   "status": "ERROR",
@@ -185,6 +201,7 @@ Response Body (Failed: Unauthorized) (401) :
 ```
 
 Response Body (Failed: Error Validation) (400) :
+
 ```json
 {
   "status": "ERROR",
@@ -196,13 +213,15 @@ Response Body (Failed: Error Validation) (400) :
 
 ## Delete User
 
-Endpoint : DELETE /user/:id
+Endpoint : DELETE /v1/user/:id
 
 Request Header :
+
 - authorization : token
 - x-control-user : userID
 
 Response Body (Success) :
+
 ```json
 {
   "status": "OK",
@@ -213,6 +232,7 @@ Response Body (Success) :
 ```
 
 Response Body (Failed: Unauthorized)(401) :
+
 ```json
 {
   "status": "ERROR",
@@ -223,6 +243,7 @@ Response Body (Failed: Unauthorized)(401) :
 ```
 
 Response Body (Failed: User not Exist) (404) :
+
 ```json
 {
   "status": "ERROR",
@@ -233,6 +254,7 @@ Response Body (Failed: User not Exist) (404) :
 ```
 
 Response Body (Failed: Error Validation) (400) :
+
 ```json
 {
   "status": "ERROR",
@@ -244,13 +266,15 @@ Response Body (Failed: Error Validation) (400) :
 
 ## Find User By ID
 
-Endpoint : GET /user/:id
+Endpoint : GET /v1/user/:id
 
 Request Header :
+
 - authorization : token
 - x-control-user : userID
 
 Response Body (Success) :
+
 ```json
 {
   "status": "OK",
@@ -270,6 +294,7 @@ Response Body (Success) :
 ```
 
 Response Body (Failed: User not Exist) (404) :
+
 ```json
 {
   "status": "ERROR",
@@ -280,6 +305,7 @@ Response Body (Failed: User not Exist) (404) :
 ```
 
 Response Body (Failed: Unauthorized)(401) :
+
 ```json
 {
   "status": "ERROR",
@@ -290,6 +316,7 @@ Response Body (Failed: Unauthorized)(401) :
 ```
 
 Response Body (Failed: Error Validation) (400) :
+
 ```json
 {
   "status": "ERROR",

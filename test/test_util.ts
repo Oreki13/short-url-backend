@@ -84,7 +84,7 @@ export class ShortLinkTest {
 export class AuthUserTest {
     static async login(email: string): Promise<{ id: string, token: string }> {
         const login = await supertest(web)
-            .post("/auth/login")
+            .post("/v1/auth/login")
             .send({
                 email: email,
                 password: "123"

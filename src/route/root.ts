@@ -1,15 +1,11 @@
 import express from 'express'
-import auth from './auth'
-import shortLink from './short_link'
-import user from "./user";
 import healthRouter from './health';
+import v1Router from './v1/root';
 
 const router = express.Router();
 
-router.use('/auth', auth)
+router.use('/v1', v1Router)
 router.use('/health', healthRouter);
-router.use('/short', shortLink)
-router.use('/user', user)
 
 
 export default router

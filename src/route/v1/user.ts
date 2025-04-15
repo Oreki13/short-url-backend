@@ -1,8 +1,8 @@
-import express, {Request, Response, NextFunction} from "express";
-import {authMiddleware} from "../middleware/auth_middleware";
-import {UserController} from "../controller/user";
-import {UserRequest} from "../type/user_request";
-import {adminMiddleware} from "../middleware/admin_middleware";
+import express, { Request, Response, NextFunction } from "express";
+import { authMiddleware } from "../../middleware/auth_middleware";
+import { UserController } from "../../controller/user";
+import { UserRequest } from "../../type/user_request";
+import { adminMiddleware } from "../../middleware/admin_middleware";
 
 const router = express.Router();
 

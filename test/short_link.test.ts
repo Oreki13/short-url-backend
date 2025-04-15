@@ -5,14 +5,14 @@ import jwt from "jsonwebtoken";
 import { AuthUserTest, ShortLinkTest } from "./test_util";
 import { prismaClient } from "../src/application/database";
 
-describe("POST /short/", () => {
+describe("POST /v1/short/", () => {
     afterAll(async () => {
         await ShortLinkTest.deleteMultiple();
     })
 
     it("should be reject store if header is invalid", async () => {
         const res = await supertest(web)
-            .post("/short/")
+            .post("/v1/short/")
             .set("authorization", "")
             .set("x-control-user", "")
             .send({
@@ -28,18 +28,11 @@ describe("POST /short/", () => {
     })
 
     it("should be reject store if body is invalid", async () => {
-        const loginResponse = await supertest(web)
-            .post("/auth/login")
-            .send({
-                email: "superadmin@mail.com",
-                password: "123"
-            });
-        const decode: any = jwt.decode(loginResponse.body.data.access_token)
-
+        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
         const response = await supertest(web)
-            .post("/short/")
-            .set("authorization", "Bearer " + loginResponse.body.data.access_token)
-            .set("x-control-user", decode!.id)
+            .post("/v1/short/")
+            .set("authorization", "Bearer " + token)
+            .set("x-control-user", id)
             .send({
                 title: "",
                 destination: "",
@@ -53,18 +46,12 @@ describe("POST /short/", () => {
     })
 
     it("should be success store", async () => {
-        const loginResponse = await supertest(web)
-            .post("/auth/login")
-            .send({
-                email: "superadmin@mail.com",
-                password: "123"
-            });
-        const decode: any = jwt.decode(loginResponse.body.data.access_token)
+        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
 
         const response = await supertest(web)
-            .post("/short/")
-            .set("authorization", "Bearer " + loginResponse.body.data.access_token)
-            .set("x-control-user", decode!.id)
+            .post("/v1/short/")
+            .set("authorization", "Bearer " + token)
+            .set("x-control-user", id)
             .send({
                 title: "test_unit_test",
                 destination: "https://google.com/",
@@ -78,18 +65,12 @@ describe("POST /short/", () => {
     })
 
     it("should be failed store duplicate endpoint", async () => {
-        const login = await supertest(web)
-            .post("/auth/login")
-            .send({
-                email: "superadmin@mail.com",
-                password: "123"
-            });
-        const decode: any = jwt.decode(login.body.data.access_token)
+        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
 
         const response = await supertest(web)
-            .post("/short/")
-            .set("authorization", "Bearer " + login.body.data.access_token)
-            .set("x-control-user", decode!.id)
+            .post("/v1/short/")
+            .set("authorization", "Bearer " + token)
+            .set("x-control-user", id)
             .send({
                 title: "test_unit_test",
                 destination: "https://google.com/",
@@ -102,18 +83,12 @@ describe("POST /short/", () => {
         expect(response.body.code).toBe("DATA_ALREADY_EXIST")
     })
     it("should be failed store because title already exist", async () => {
-        const login = await supertest(web)
-            .post("/auth/login")
-            .send({
-                email: "superadmin@mail.com",
-                password: "123"
-            });
-        const decode: any = jwt.decode(login.body.data.access_token)
+        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
 
         const response = await supertest(web)
-            .post("/short/")
-            .set("authorization", "Bearer " + login.body.data.access_token)
-            .set("x-control-user", decode!.id)
+            .post("/v1/short/")
+            .set("authorization", "Bearer " + token)
+            .set("x-control-user", id)
             .send({
                 title: "test_unit_test",
                 destination: "https://google.com/",
@@ -127,18 +102,11 @@ describe("POST /short/", () => {
     })
 
     it("should be failed store because path already exist", async () => {
-        const login = await supertest(web)
-            .post("/auth/login")
-            .send({
-                email: "superadmin@mail.com",
-                password: "123"
-            });
-        const decode: any = jwt.decode(login.body.data.access_token)
-
+        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
         const response = await supertest(web)
-            .post("/short/")
-            .set("authorization", "Bearer " + login.body.data.access_token)
-            .set("x-control-user", decode!.id)
+            .post("/v1/short/")
+            .set("authorization", "Bearer " + token)
+            .set("x-control-user", id)
             .send({
                 title: "test_unit_test_2",
                 destination: "https://google.com/",
@@ -152,18 +120,11 @@ describe("POST /short/", () => {
     })
 
     it("should be success store other data", async () => {
-        const login = await supertest(web)
-            .post("/auth/login")
-            .send({
-                email: "superadmin@mail.com",
-                password: "123"
-            });
-        const decode: any = jwt.decode(login.body.data.access_token)
-
+        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
         const response = await supertest(web)
-            .post("/short/")
-            .set("authorization", "Bearer " + login.body.data.access_token)
-            .set("x-control-user", decode!.id)
+            .post("/v1/short/")
+            .set("authorization", "Bearer " + token)
+            .set("x-control-user", id)
             .send({
                 title: "test_unit_test_2",
                 destination: "https://google.com/",
@@ -177,7 +138,7 @@ describe("POST /short/", () => {
     })
 })
 
-describe("GET /short/", () => {
+describe("GET /v1/short/", () => {
     beforeAll(async () => {
         await ShortLinkTest.addMultipleData();
     })
@@ -187,7 +148,7 @@ describe("GET /short/", () => {
 
     it("should be reject get if header is invalid", async () => {
         const res = await supertest(web)
-            .get("/short/")
+            .get("/v1/short/")
             .set("authorization", "")
             .set("x-control-user", "")
             .send({
@@ -204,7 +165,7 @@ describe("GET /short/", () => {
     it("should be success get with 5 limit and page 1", async () => {
         const { id, token } = await AuthUserTest.login("superadmin@mail.com");
         const res = await supertest(web)
-            .get("/short/")
+            .get("/v1/short/")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
             .query({
@@ -225,7 +186,7 @@ describe("GET /short/", () => {
     it("should be success get with 5 limit and page 2", async () => {
         const { id, token } = await AuthUserTest.login("superadmin@mail.com");
         const res = await supertest(web)
-            .get("/short/")
+            .get("/v1/short/")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
             .query({
@@ -246,7 +207,7 @@ describe("GET /short/", () => {
     it("should be success get with 10 limit and page 1", async () => {
         const { id, token } = await AuthUserTest.login("superadmin@mail.com");
         const res = await supertest(web)
-            .get("/short/")
+            .get("/v1/short/")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
             .query({
@@ -267,7 +228,7 @@ describe("GET /short/", () => {
     it("should be success get with 10 limit and page 2", async () => {
         const { id, token } = await AuthUserTest.login("superadmin@mail.com");
         const res = await supertest(web)
-            .get("/short/")
+            .get("/v1/short/")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
             .query({
@@ -288,7 +249,7 @@ describe("GET /short/", () => {
     it("should be success search title", async () => {
         const { id, token } = await AuthUserTest.login("superadmin@mail.com");
         const res = await supertest(web)
-            .get("/short/")
+            .get("/v1/short/")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
             .query({
@@ -310,7 +271,7 @@ describe("GET /short/", () => {
     it("should be success sort asc", async () => {
         const { id, token } = await AuthUserTest.login("superadmin@mail.com");
         const res = await supertest(web)
-            .get("/short/")
+            .get("/v1/short/")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
             .query({
@@ -333,7 +294,7 @@ describe("GET /short/", () => {
     it("should be success sort desc", async () => {
         const { id, token } = await AuthUserTest.login("superadmin@mail.com");
         const res = await supertest(web)
-            .get("/short/")
+            .get("/v1/short/")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
             .query({
@@ -354,7 +315,7 @@ describe("GET /short/", () => {
     })
 })
 
-describe("PUT /short/:id", () => {
+describe("PUT /v1/short/:id", () => {
     beforeAll(async () => {
         await ShortLinkTest.addMultipleData();
     })
@@ -364,7 +325,7 @@ describe("PUT /short/:id", () => {
 
     it("Should be failed no header", async () => {
         const res = await supertest(web)
-            .put("/short/tes")
+            .put("/v1/short/tes")
 
         logger.debug(res.body);
         expect(res.status).toBe(401)
@@ -376,7 +337,7 @@ describe("PUT /short/:id", () => {
         const { id, token } = await AuthUserTest.login("superadmin@mail.com");
 
         const res = await supertest(web)
-            .put("/short/")
+            .put("/v1/short/")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
 
@@ -388,7 +349,7 @@ describe("PUT /short/:id", () => {
         const { id, token } = await AuthUserTest.login("superadmin@mail.com");
 
         const res = await supertest(web)
-            .put("/short/tes")
+            .put("/v1/short/tes")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
             .send({
@@ -412,12 +373,12 @@ describe("PUT /short/:id", () => {
             }
         })
         await supertest(web)
-            .delete("/short/" + findData!.id)
+            .delete("/v1/short/" + findData!.id)
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
 
         const res = await supertest(web)
-            .put("/short/" + findData!.id)
+            .put("/v1/short/" + findData!.id)
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
             .send({
@@ -441,7 +402,7 @@ describe("PUT /short/:id", () => {
             }
         })
         const res = await supertest(web)
-            .put("/short/" + findData!.id)
+            .put("/v1/short/" + findData!.id)
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
             .send({
@@ -466,7 +427,7 @@ describe("PUT /short/:id", () => {
     })
 })
 
-describe("DELETE /short/:id", () => {
+describe("DELETE /v1/short/:id", () => {
     beforeAll(async () => {
         await ShortLinkTest.addMultipleData();
     });
@@ -476,7 +437,7 @@ describe("DELETE /short/:id", () => {
 
     it("Should be failed no header", async () => {
         const res = await supertest(web)
-            .delete("/short/")
+            .delete("/v1/short/")
 
         logger.debug(res.body);
         expect(res.status).toBe(401)
@@ -488,7 +449,7 @@ describe("DELETE /short/:id", () => {
         const { id, token } = await AuthUserTest.login("superadmin@mail.com");
 
         const res = await supertest(web)
-            .delete("/short/")
+            .delete("/v1/short/")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
 
@@ -500,7 +461,7 @@ describe("DELETE /short/:id", () => {
         const { id, token } = await AuthUserTest.login("superadmin@mail.com");
 
         const res = await supertest(web)
-            .delete("/short/tes")
+            .delete("/v1/short/tes")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
 
@@ -522,7 +483,7 @@ describe("DELETE /short/:id", () => {
         })
 
         const res = await supertest(web)
-            .delete("/short/" + findData!.id)
+            .delete("/v1/short/" + findData!.id)
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
 
@@ -532,7 +493,7 @@ describe("DELETE /short/:id", () => {
         expect(res.body.code).toBe("SUCCESS_DELETE_LINK")
 
         const resAfterDelete = await supertest(web)
-            .delete("/short/" + findData!.id)
+            .delete("/v1/short/" + findData!.id)
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
 
@@ -543,18 +504,12 @@ describe("DELETE /short/:id", () => {
     })
 
     it("should be success store deleted data", async () => {
-        const loginResponse = await supertest(web)
-            .post("/auth/login")
-            .send({
-                email: "superadmin@mail.com",
-                password: "123"
-            });
-        const decode: any = jwt.decode(loginResponse.body.data.access_token)
+        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
 
         const response = await supertest(web)
-            .post("/short/")
-            .set("authorization", "Bearer " + loginResponse.body.data.access_token)
-            .set("x-control-user", decode!.id)
+            .post("/v1/short/")
+            .set("authorization", "Bearer " + token)
+            .set("x-control-user", id)
             .send({
                 title: "test_unit_test 0",
                 destination: "https://google.com/",
