@@ -187,8 +187,7 @@ Response Body (Failed: User not Exist) (404) :
 
 ## Edit Short Link
 
-Endpoint : PATCH /v1/short/:id
-
+Endpoint : PUT /v1/short/:id
 Request Header :
 
 - authorization : token
