@@ -11,6 +11,7 @@ import rateLimit from 'express-rate-limit';
 import http from 'http';
 import { auditLogMiddleware } from "../middleware/audit_log"
 import cookieParser from 'cookie-parser';
+import lusca from 'lusca';
 
 const web: Express = express();
 if (process.env.NODE_ENV !== "test") {
@@ -45,6 +46,7 @@ web.use(cors(
 
 // Tambahkan cookie parser middleware
 web.use(cookieParser(process.env.COOKIE_SECRET || 'secure-cookie-secret-key'));
+web.use(lusca.csrf());
 
 web.use(helmet({
     contentSecurityPolicy: {
