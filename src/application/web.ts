@@ -7,27 +7,88 @@ import { errorMiddleware } from "../middleware/error_middleware";
 import cors from "cors";
 import { Sentry } from "./sentry";
 import ErrorController from "../controller/error";
+import rateLimit from 'express-rate-limit';
+import http from 'http';
+import { auditLogMiddleware } from "../middleware/audit_log"
+import cookieParser from 'cookie-parser';
 
 const web: Express = express();
 if (process.env.NODE_ENV !== "test") {
     Sentry.setupExpressErrorHandler(web);
 }
 
+// Tambahkan sebelum route definitions
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 menit
+    max: 100, // batas 100 request per windowMs per IP
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+        status: "ERROR",
+        code: "TOO_MANY_REQUESTS",
+        message: "Too many requests, please try again later"
+    }
+});
+web.use(limiter);
+
+const allowedOrigins = process.env.ALLOWED_ORIGINS ?
+    process.env.ALLOWED_ORIGINS.split(',') :
+    ['http://localhost:3000'];
+
 web.use(cors(
     {
-        origin: "*",
+        origin: allowedOrigins,
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+        credentials: true, // Penting untuk cookie cross-origin
     }
 ));
-web.use(helmet());
+
+// Tambahkan cookie parser middleware
+web.use(cookieParser(process.env.COOKIE_SECRET || 'secure-cookie-secret-key'));
+
+web.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'"],
+            styleSrc: ["'self'"],
+            imgSrc: ["'self'"],
+            connectSrc: ["'self'"],
+            fontSrc: ["'self'"],
+            objectSrc: ["'none'"],
+            mediaSrc: ["'self'"],
+            frameSrc: ["'none'"],
+        },
+    },
+    crossOriginEmbedderPolicy: true,
+    crossOriginOpenerPolicy: true,
+    crossOriginResourcePolicy: { policy: "same-site" },
+    dnsPrefetchControl: { allow: false },
+    frameguard: { action: "deny" },
+    hsts: { maxAge: 15552000, includeSubDomains: true },
+    referrerPolicy: { policy: "no-referrer" },
+    xssFilter: true,
+    noSniff: true,
+    permittedCrossDomainPolicies: { permittedPolicies: "none" }
+}));
+
+web.use((_, res, next) => {
+    res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+    next();
+});
+
 web.use(
     bodyParser.urlencoded({
         extended: false,
     })
 );
 web.use(bodyParser.json())
+web.use(auditLogMiddleware)
 web.use('/', router)
 web.use(ErrorController.notFoundHandler)
 web.use(errorMiddleware)
+
+const server = http.createServer(web);
+server.setTimeout(30000); // 30 detik timeout
 
 export { web, Sentry }

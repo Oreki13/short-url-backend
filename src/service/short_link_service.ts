@@ -4,17 +4,17 @@ import {
     ShortLinkStoreRequest, ShortLinkUpdateRequest,
     toShortLinkGetAllResponse
 } from "../model/short_link_model";
-import {HeaderAuthRequest} from "../model/auth_model";
-import {ShortLinkValidation} from "../validation/short_link_validation";
-import {Validation} from "../validation/validation";
-import {Auth_validation} from "../validation/auth_validation";
-import {BasicResponse, defaultResponse} from "../model/basic_response_model";
-import {Pageable} from "../model/page";
-import {prismaClient} from "../application/database";
-import {v4 as uuidv4} from "uuid";
-import {DataUrl} from "@prisma/client";
+import { HeaderAuthRequest } from "../model/auth_model";
+import { ShortLinkValidation } from "../validation/short_link_validation";
+import { Validation } from "../validation/validation";
+import { Auth_validation } from "../validation/auth_validation";
+import { BasicResponse, defaultResponse } from "../model/basic_response_model";
+import { Pageable } from "../model/page";
+import { prismaClient } from "../application/database";
+import { v4 as uuidv4 } from "uuid";
+import { DataUrl } from "@prisma/client";
 import dayjs from "dayjs";
-import {ResponseError} from "../error/response_error";
+import { ResponseError } from "../error/response_error";
 
 export class ShortLinkServices {
     static async getAll(requestBody: ShortLinkGetAllRequest, requestHeader: HeaderAuthRequest): Promise<Pageable<ShortLinkGetAllResponse>> {
@@ -93,19 +93,20 @@ export class ShortLinkServices {
 
         const findDataUrl = await prismaClient.dataUrl.findFirst({
             where: {
-                OR: [
-                    {
-                        path: request.path,
-                    }, {
-                        title: request.title,
-                    }
-                ],
+                AND: {
+                    user_id: userId,
+                    path: request.path,
+                }
             }
         })
 
-
         if (findDataUrl !== null && findDataUrl.is_deleted === 0) {
-            throw new ResponseError(400, "DATA_ALREADY_EXIST", "Title or path has exist");
+            throw new ResponseError(400, "DATA_ALREADY_EXIST", "Path has exist");
+        }
+
+        // Remove all leading slashes from the path
+        while (request.path.startsWith("/")) {
+            request.path = request.path.substring(1);
         }
 
         if (findDataUrl !== null && findDataUrl.is_deleted === 1) {
@@ -164,7 +165,7 @@ export class ShortLinkServices {
     }
 
     static async update(requestBody: ShortLinkUpdateRequest, shortLinkId: string): Promise<BasicResponse> {
-        const {title, destination, path} = Validation.validate(ShortLinkValidation.UPDATE, requestBody);
+        const { title, destination, path } = Validation.validate(ShortLinkValidation.UPDATE, requestBody);
 
         const findDataUrl = await prismaClient.dataUrl.findUnique({
             where: {
@@ -201,7 +202,7 @@ export class ShortLinkServices {
     }
 
     static async delete(shortLinkId: string): Promise<BasicResponse> {
-        const data = Validation.validate(ShortLinkValidation.SHORTLINKID, {"id": shortLinkId});
+        const data = Validation.validate(ShortLinkValidation.SHORTLINKID, { "id": shortLinkId });
 
         const findDataUrl = await prismaClient.dataUrl.findUnique({
             where: {

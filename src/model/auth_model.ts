@@ -10,12 +10,22 @@ export interface LoginResponse {
 }
 
 export type HeaderAuthRequest = {
-    authorization: string,
+    authorization?: string,
     "x-control-user": string,
+    cookies?: {
+        accessToken?: string;
+        refreshToken?: string;
+        [key: string]: string | undefined;
+    }
 }
 
 export interface RefreshTokenRequest {
-    refresh_token: string;
+    refresh_token?: string;
+    cookies?: {
+        accessToken?: string;
+        refreshToken?: string;
+        [key: string]: string | undefined;
+    }
 }
 
 export interface TokenResponse {
@@ -24,7 +34,12 @@ export interface TokenResponse {
 }
 
 export interface RevokeTokenRequest {
-    refresh_token: string;
+    refresh_token?: string;
+    cookies?: {
+        accessToken?: string;
+        refreshToken?: string;
+        [key: string]: string | undefined;
+    }
 }
 
 export const toLoginResponse = (accessToken: string, refreshToken: string, expiresIn: number): LoginResponse => {
