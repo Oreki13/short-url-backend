@@ -121,7 +121,9 @@ web.use(
     })
 );
 web.use(bodyParser.json())
-web.use(auditLogMiddleware)
+if (process.env.NODE_ENV !== "test") {
+    web.use(auditLogMiddleware)
+}
 web.use('/', router)
 web.use(ErrorController.notFoundHandler)
 web.use(errorMiddleware)
