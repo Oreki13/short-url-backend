@@ -3,7 +3,8 @@ import { web } from "../src/application/web";
 import { logger } from "../src/application/logger";
 import { AuthUserTest, RoleUserTest, UserTest } from "./test_util";
 
-describe("GET /v1/user/", () => {
+
+describe("GET /api/v1/user/", () => {
     beforeAll(async () => {
         await UserTest.createUser();
     });
@@ -14,7 +15,7 @@ describe("GET /v1/user/", () => {
 
     it("Should be error with no header", async () => {
         const response = await supertest(web)
-            .get("/v1/user/")
+            .get("/api/v1/user/")
 
         logger.debug(response.body)
         expect(response.status).toBe(401);
@@ -22,11 +23,13 @@ describe("GET /v1/user/", () => {
     })
 
     it("Should be error because login as user", async () => {
-        const { id, token } = await AuthUserTest.login("user@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("user@mail.com");
         const response = await supertest(web)
-            .get("/v1/user/")
+            .get("/api/v1/user/")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
+            .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
             .query({
                 page: "1",
                 limit: "5",
@@ -40,11 +43,13 @@ describe("GET /v1/user/", () => {
     })
 
     it("Should success get with login as admin", async () => {
-        const { id, token } = await AuthUserTest.login("admin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("admin@mail.com");
         const response = await supertest(web)
-            .get("/v1/user")
+            .get("/api/v1/user")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
+            .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
             .query({
                 page: "1",
                 limit: "5",
@@ -59,11 +64,13 @@ describe("GET /v1/user/", () => {
     })
 
     it("Should be get 5 user and ascending", async () => {
-        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("superadmin@mail.com");
         const response = await supertest(web)
-            .get("/v1/user")
+            .get("/api/v1/user")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
+            .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
             .query({
                 page: "1",
                 limit: "5",
@@ -78,11 +85,13 @@ describe("GET /v1/user/", () => {
     })
 
     it("Should be get 5 user and descending", async () => {
-        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("superadmin@mail.com");
         const response = await supertest(web)
-            .get("/v1/user")
+            .get("/api/v1/user")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
+            .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
             .query({
                 page: "1",
                 limit: "5",
@@ -97,11 +106,13 @@ describe("GET /v1/user/", () => {
     })
 
     it("Should be get 1 user with name user_test_9", async () => {
-        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("superadmin@mail.com");
         const response = await supertest(web)
-            .get("/v1/user")
+            .get("/api/v1/user")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
+            .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
             .query({
                 keyword: "user_test_9",
                 page: "1",
@@ -118,7 +129,7 @@ describe("GET /v1/user/", () => {
     })
 })
 
-describe("POST /v1/user/create", () => {
+describe("POST /api/v1/user/create", () => {
 
     afterAll(async () => {
         await UserTest.deleteUser();
@@ -126,19 +137,21 @@ describe("POST /v1/user/create", () => {
 
     it("Should be error with no header", async () => {
         const response = await supertest(web)
-            .post("/v1/user/create")
+            .post("/api/v1/user/create")
 
         logger.debug(response.body);
-        expect(response.status).toBe(401);
-        expect(response.body.code).toBe("UNAUTHORIZED");
+        expect(response.status).toBe(403);
+        expect(response.body.code).toBe("CSRF_ERROR");
     })
 
     it("Should be error because login as user", async () => {
-        const { id, token } = await AuthUserTest.login("user@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("user@mail.com");
         const response = await supertest(web)
-            .post("/v1/user/create")
+            .post("/api/v1/user/create")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
+            .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
 
         logger.debug(response.body);
         expect(response.status).toBe(401);
@@ -147,11 +160,13 @@ describe("POST /v1/user/create", () => {
     })
 
     it("Should be success because login as admin", async () => {
-        const { id, token } = await AuthUserTest.login("admin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("admin@mail.com");
         const response = await supertest(web)
-            .post("/v1/user/create")
+            .post("/api/v1/user/create")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
+            .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
 
         logger.debug(response.body);
         expect(response.status).toBe(400);
@@ -159,24 +174,28 @@ describe("POST /v1/user/create", () => {
     })
 
     it("Should be error with no body", async () => {
-        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("admin@mail.com");
         const response = await supertest(web)
-            .post("/v1/user/create")
+            .post("/api/v1/user/create")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
+            .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
 
-        logger.debug(response.body);
+        logger.info(response.body);
         expect(response.status).toBe(400);
         expect(response.body.code).toBe("ERROR_VALIDATION");
     })
 
     it("Should be error with no input name", async () => {
-        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("admin@mail.com");
 
         const response = await supertest(web)
-            .post("/v1/user/create")
+            .post("/api/v1/user/create")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
+            .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
             .send({
                 name: "",
                 email: "test@example.com",
@@ -190,12 +209,14 @@ describe("POST /v1/user/create", () => {
     })
 
     it("Should be error with no input email", async () => {
-        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("admin@mail.com");
 
         const response = await supertest(web)
-            .post("/v1/user/create")
+            .post("/api/v1/user/create")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
+            .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
             .send({
                 name: "test",
                 email: "",
@@ -209,12 +230,14 @@ describe("POST /v1/user/create", () => {
     })
 
     it("Should be error with no input password", async () => {
-        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("admin@mail.com");
 
         const response = await supertest(web)
-            .post("/v1/user/create")
+            .post("/api/v1/user/create")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
+            .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
             .send({
                 name: "test",
                 email: "test@example.com",
@@ -228,12 +251,14 @@ describe("POST /v1/user/create", () => {
     })
 
     it("Should be error with no input roleid", async () => {
-        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("admin@mail.com");
 
         const response = await supertest(web)
-            .post("/v1/user/create")
+            .post("/api/v1/user/create")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
+            .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
             .send({
                 name: "test",
                 email: "test@example.com",
@@ -247,12 +272,14 @@ describe("POST /v1/user/create", () => {
     })
 
     it("Should be error with no roleid exist", async () => {
-        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("admin@mail.com");
 
         const response = await supertest(web)
-            .post("/v1/user/create")
+            .post("/api/v1/user/create")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
+            .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
             .send({
                 name: "test",
                 email: "test@example.com",
@@ -266,14 +293,16 @@ describe("POST /v1/user/create", () => {
     })
 
     it("Should be success add user", async () => {
-        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("admin@mail.com");
 
         const roleId = await RoleUserTest.findRoleName("user")
 
         const response = await supertest(web)
-            .post("/v1/user/create")
+            .post("/api/v1/user/create")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
+            .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
             .send({
                 name: "user_unit_test",
                 email: "user_unit_test@example.com",
@@ -287,13 +316,15 @@ describe("POST /v1/user/create", () => {
     })
 
     it("Should be failed add user because duplicate", async () => {
-        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("admin@mail.com");
 
         const roleId = await RoleUserTest.findRoleName("user")
         const response = await supertest(web)
-            .post("/v1/user/create")
+            .post("/api/v1/user/create")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
+            .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
             .send({
                 name: "user_unit_test",
                 email: "user_unit_test@example.com",
@@ -307,7 +338,7 @@ describe("POST /v1/user/create", () => {
     })
 })
 
-describe("DELETE /v1/user/:id", () => {
+describe("DELETE /api/v1/user/:id", () => {
     beforeAll(async () => {
         await UserTest.createOneUser();
     })
@@ -318,19 +349,21 @@ describe("DELETE /v1/user/:id", () => {
 
     it("Should be error with no header", async () => {
         const response = await supertest(web)
-            .delete("/v1/user/wref")
+            .delete("/api/v1/user/wref")
 
         logger.debug(response.body);
-        expect(response.status).toBe(401);
-        expect(response.body.code).toBe("UNAUTHORIZED");
+        expect(response.status).toBe(403);
+        expect(response.body.code).toBe("CSRF_ERROR");
     })
 
     it("Should be error because login as user", async () => {
-        const { id, token } = await AuthUserTest.login("user@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("user@mail.com");
         const response = await supertest(web)
-            .delete("/v1/user/wref")
+            .delete("/api/v1/user/wref")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
+            .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
 
         logger.debug(response.body);
         expect(response.status).toBe(401);
@@ -339,11 +372,13 @@ describe("DELETE /v1/user/:id", () => {
     })
 
     it("Should be success login because login as admin", async () => {
-        const { id, token } = await AuthUserTest.login("admin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("admin@mail.com");
         const response = await supertest(web)
-            .delete("/v1/user/wref")
+            .delete("/api/v1/user/wref")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
+            .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
 
         logger.debug(response.body);
         expect(response.status).toBe(404);
@@ -351,11 +386,13 @@ describe("DELETE /v1/user/:id", () => {
     })
 
     it("Should be error because id not exist", async () => {
-        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("admin@mail.com");
         const response = await supertest(web)
-            .delete("/v1/user/unknown")
+            .delete("/api/v1/user/unknown")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
+            .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
 
         logger.debug(response.body);
         expect(response.status).toBe(404);
@@ -363,12 +400,14 @@ describe("DELETE /v1/user/:id", () => {
     })
 
     it("Should be success delete user", async () => {
-        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("admin@mail.com");
         const findUser = await UserTest.findUserByEmail("user_unit_test@example.com")
         const response = await supertest(web)
-            .delete("/v1/user/" + findUser!.id)
+            .delete("/api/v1/user/" + findUser!.id)
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
+            .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
 
         logger.debug(response.body);
         expect(response.status).toBe(200);
@@ -380,7 +419,7 @@ describe("DELETE /v1/user/:id", () => {
     })
 })
 
-describe("GET /v1/user/:id", () => {
+describe("GET /api/v1/user/:id", () => {
     beforeAll(async () => {
         await UserTest.createOneUser();
     })
@@ -390,7 +429,7 @@ describe("GET /v1/user/:id", () => {
 
     it("Should be error with no header", async () => {
         const response = await supertest(web)
-            .get("/v1/user/wref")
+            .get("/api/v1/user/wref")
 
         logger.debug(response.body);
         expect(response.status).toBe(401);
@@ -398,11 +437,13 @@ describe("GET /v1/user/:id", () => {
     })
 
     it("Should be error because login as user", async () => {
-        const { id, token } = await AuthUserTest.login("user@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("user@mail.com");
         const response = await supertest(web)
-            .get("/v1/user/wref")
+            .get("/api/v1/user/wref")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
+            .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
 
         logger.debug(response.body);
         expect(response.status).toBe(401);
@@ -411,11 +452,13 @@ describe("GET /v1/user/:id", () => {
     })
 
     it("Should be success login because login as user", async () => {
-        const { id, token } = await AuthUserTest.login("admin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("admin@mail.com");
         const response = await supertest(web)
-            .get("/v1/user/wref")
+            .get("/api/v1/user/wref")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
+            .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
 
         logger.debug(response.body);
         expect(response.status).toBe(404);
@@ -423,11 +466,13 @@ describe("GET /v1/user/:id", () => {
     })
 
     it("Should be error because id not exist", async () => {
-        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("admin@mail.com");
         const response = await supertest(web)
-            .get("/v1/user/unknown")
+            .get("/api/v1/user/unknown")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
+            .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
 
         logger.debug(response.body);
         expect(response.status).toBe(404);
@@ -435,12 +480,14 @@ describe("GET /v1/user/:id", () => {
     })
 
     it("Should be success find user", async () => {
-        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("admin@mail.com");
         const findUser = await UserTest.findUserByEmail("user_unit_test@example.com")
         const response = await supertest(web)
-            .get("/v1/user/" + findUser!.id)
+            .get("/api/v1/user/" + findUser!.id)
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
+            .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
 
         logger.debug(response.body);
         expect(response.status).toBe(200);

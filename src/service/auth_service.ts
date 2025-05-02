@@ -7,9 +7,11 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from 'uuid';
 import { BasicResponse, defaultResponse } from "../model/basic_response_model";
+import { generateJwt } from "../helper/generate_jwt";
+import { Request, Response } from 'express';
 
 export class Auth_service {
-    static async login(request: LoginRequest, ipAddress: string, userAgent: string): Promise<LoginResponse> {
+    static async login(request: LoginRequest, ipAddress: string, userAgent: string, res: Response): Promise<LoginResponse> {
         const loginRequest = Validation.validate(Auth_validation.LOGIN, request);
         const findUser = await prismaClient.user.findFirst({
             where: {
@@ -34,9 +36,7 @@ export class Auth_service {
             throw new ResponseError(404, "INVALID_CREDENTIAL", "Credential is invalid");
         }
 
-        const secret = process.env.SECRET_KEY
-        const expiresIn = 60 * 130; // 130 minutes in seconds
-        const generateToken = jwt.sign({ "name": findUser.name, "id": findUser.id }, secret!, { expiresIn: '130m' })
+        const { access_token, expires_in } = generateJwt(findUser.name, findUser.id);
 
         // Generate refresh token
         const refreshToken = uuidv4();
@@ -85,31 +85,56 @@ export class Auth_service {
             }
         });
 
-        return toLoginResponse(generateToken, refreshToken, expiresIn);
+        // Set secure cookies
+        this.setTokenCookies(res, access_token, refreshToken, expires_in);
+
+        return toLoginResponse(access_token, refreshToken, expires_in);
     }
 
     static async verify(request: HeaderAuthRequest): Promise<BasicResponse> {
         const headerRequest = Validation.validate(Auth_validation.TOKENHEADER, request)
         const secretKey = process.env.SECRET_KEY;
-        const accessToken = headerRequest.authorization?.split('Bearer')[1].trim()
-        jwt.verify(accessToken!, secretKey!, (err, decoded: any) => {
 
+        // Get token from Authorization header or from cookie
+        let accessToken: string | undefined;
+
+        if (headerRequest.authorization) {
+            accessToken = headerRequest.authorization?.split('Bearer')[1].trim();
+        } else if (headerRequest.cookies?.accessToken) {
+            accessToken = headerRequest.cookies.accessToken;
+        }
+
+        if (!accessToken) {
+            throw new ResponseError(401, "MISSING_TOKEN", "Access token is missing");
+        }
+
+        jwt.verify(accessToken, secretKey!, { algorithms: ['HS256'] }, (err, decoded: any) => {
             if (err && err.name === "TokenExpiredError") throw new ResponseError(401, "TOKEN_EXPIRED", "Token has been expired")
 
             if (err && err.name === "JsonWebTokenError") throw new ResponseError(401, "INVALID_TOKEN", "Token is invalid")
 
             if (headerRequest["x-control-user"] !== decoded!.id) throw new ResponseError(401, "INVALID_USER_TOKEN", "Invalid token user")
-
         })
 
         return defaultResponse
     }
 
-    static async refreshToken(request: RefreshTokenRequest): Promise<TokenResponse> {
+    static async refreshToken(request: RefreshTokenRequest, res: Response): Promise<TokenResponse> {
+        let refreshTokenValue = request.refresh_token;
+
+        // Try to get refresh token from cookie if not in request body
+        if (!refreshTokenValue && request.cookies?.refreshToken) {
+            refreshTokenValue = request.cookies.refreshToken;
+        }
+
+        if (!refreshTokenValue) {
+            throw new ResponseError(400, "MISSING_REFRESH_TOKEN", "Refresh token is required");
+        }
+
         // Find the refresh token in database
         const token = await prismaClient.token.findFirst({
             where: {
-                refresh_token: request.refresh_token,
+                refresh_token: refreshTokenValue,
                 is_revoked: false,
                 expires_at: {
                     gt: new Date() // Not expired
@@ -130,21 +155,33 @@ export class Auth_service {
         }
 
         // Generate new access token
-        const secret = process.env.SECRET_KEY;
-        const expiresIn = 60 * 130; // 130 minutes in seconds
-        const accessToken = jwt.sign({ "name": token.user.name, "id": token.user.id }, secret!, { expiresIn: '130m' });
+        const { access_token, expires_in } = generateJwt(token.user.name, token.user.id);
+
+        // Set new cookies
+        this.setTokenCookies(res, access_token, refreshTokenValue, expires_in);
 
         return {
-            access_token: accessToken,
-            expires_in: expiresIn
+            access_token,
+            expires_in
         };
     }
 
-    static async revokeToken(request: RevokeTokenRequest): Promise<BasicResponse> {
+    static async revokeToken(request: RevokeTokenRequest, res: Response): Promise<BasicResponse> {
+        let refreshTokenValue = request.refresh_token;
+
+        // Try to get refresh token from cookie if not in request body
+        if (!refreshTokenValue && request.cookies?.refreshToken) {
+            refreshTokenValue = request.cookies.refreshToken;
+        }
+
+        if (!refreshTokenValue) {
+            throw new ResponseError(400, "MISSING_REFRESH_TOKEN", "Refresh token is required");
+        }
+
         // Revoke the refresh token
         const token = await prismaClient.token.findFirst({
             where: {
-                refresh_token: request.refresh_token,
+                refresh_token: refreshTokenValue,
                 is_revoked: false
             }
         });
@@ -162,13 +199,16 @@ export class Auth_service {
             }
         });
 
+        // Clear cookies
+        this.clearTokenCookies(res);
+
         return {
             ...defaultResponse,
             message: "Token revoked successfully"
         };
     }
 
-    static async logout(userId: string): Promise<BasicResponse> {
+    static async logout(userId: string, res: Response): Promise<BasicResponse> {
         // Revoke all refresh tokens for the user
         await prismaClient.token.updateMany({
             where: {
@@ -180,10 +220,38 @@ export class Auth_service {
             }
         });
 
+        // Clear cookies
+        this.clearTokenCookies(res);
+
         return {
             ...defaultResponse,
             message: "Logged out successfully"
         };
     }
 
+    // Helper methods for cookie management
+    private static setTokenCookies(res: Response, accessToken: string, refreshToken: string, expiresIn: number): void {
+        // Set access token cookie (short-lived)
+        res.cookie('accessToken', accessToken, {
+            httpOnly: true,                              // Tidak dapat diakses via JavaScript
+            secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+            sameSite: 'strict',                          // Proteksi CSRF
+            maxAge: expiresIn * 1000,                    // Konversi dari detik ke milidetik
+            path: '/'
+        });
+
+        // Set refresh token cookie (long-lived)
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000,            // 7 hari
+            path: '/api/v1/auth'                         // Hanya tersedia di endpoint auth
+        });
+    }
+
+    private static clearTokenCookies(res: Response): void {
+        res.clearCookie('accessToken', { path: '/' });
+        res.clearCookie('refreshToken', { path: '/api/v1/auth' });
+    }
 }

@@ -1,6 +1,6 @@
-import {UserNameAndID} from "./user_model";
-import {DefaultArgs, GetFindResult} from "prisma/prisma-client/runtime/library";
-import {Prisma} from "@prisma/client";
+import { UserNameAndID } from "./user_model";
+import { DefaultArgs, GetFindResult } from "prisma/prisma-client/runtime/library";
+import { Prisma } from "@prisma/client";
 
 export type ShortLinkGetAllRequest = {
     page: string,
@@ -15,6 +15,7 @@ export type ShortLinkGetAllResponse = {
     path: string,
     count_clicks: number,
     destination: string,
+    short_url: string,
     user: UserNameAndID
     createdAt: Date,
     updatedAt: Date,
@@ -50,8 +51,12 @@ export const toShortLinkGetAllResponse = (data: GetFindResult<Prisma.$DataUrlPay
     orderBy: { createdAt: string };
     skip: number;
     where: { is_deleted: number; user_id: string }
-}, any> => {
-    return data;
+}, any> & { short_url: string } => {
+    const domain = process.env.DOMAIN_SHORT || 'http://localhost:3001/';
+    return {
+        ...data,
+        short_url: `${domain}/${data.path}`
+    };
 }
 
 export type ShortLinkStoreRequest = {

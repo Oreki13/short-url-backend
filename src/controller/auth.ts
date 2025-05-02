@@ -13,8 +13,7 @@ class AuthController {
             const ipAddress = req.ip || req.socket.remoteAddress || '';
             const userAgent = req.headers['user-agent'] || '';
 
-            const response: LoginResponse = await Auth_service.login(request, ipAddress, userAgent)
-
+            const response: LoginResponse = await Auth_service.login(request, ipAddress, userAgent, res)
 
             res.status(200).json({
                 ...defaultResponse,
@@ -30,9 +29,14 @@ class AuthController {
             next(e)
         }
     }
+
     static async verify(req: Request, res: Response<BasicResponse>, next: NextFunction) {
         try {
-            const request: HeaderAuthRequest = req.headers as HeaderAuthRequest
+            const request: HeaderAuthRequest = {
+                authorization: req.headers.authorization,
+                "x-control-user": req.headers["x-control-user"] as string || "",
+                cookies: req.cookies // Tambahkan cookies untuk verifikasi
+            };
             const response: BasicResponse = await Auth_service.verify(request)
 
             res.status(200).json(response);
@@ -43,8 +47,11 @@ class AuthController {
 
     static async refreshToken(req: Request, res: Response, next: NextFunction) {
         try {
-            const request: RefreshTokenRequest = req.body as RefreshTokenRequest
-            const response: TokenResponse = await Auth_service.refreshToken(request)
+            const request: RefreshTokenRequest = {
+                ...req.body as RefreshTokenRequest,
+                cookies: req.cookies // Tambahkan cookies untuk refresh token
+            };
+            const response: TokenResponse = await Auth_service.refreshToken(request, res)
 
             res.status(200).json({
                 ...defaultResponse,
@@ -58,8 +65,11 @@ class AuthController {
 
     static async revokeToken(req: Request, res: Response<BasicResponse>, next: NextFunction) {
         try {
-            const request: RevokeTokenRequest = req.body as RevokeTokenRequest
-            const response: BasicResponse = await Auth_service.revokeToken(request)
+            const request: RevokeTokenRequest = {
+                ...req.body as RevokeTokenRequest,
+                cookies: req.cookies // Tambahkan cookies
+            };
+            const response: BasicResponse = await Auth_service.revokeToken(request, res)
 
             res.status(200).json({
                 ...defaultResponse,
@@ -75,17 +85,24 @@ class AuthController {
         try {
             // Get user id from token
             const authorization = req.headers.authorization;
-            if (!authorization) {
-                throw new ResponseError(401, "UNAUTHORIZED", "No authorization header");
+            let userId: string;
+
+            if (authorization) {
+                const token = authorization.split('Bearer')[1]?.trim();
+                const secret = process.env.SECRET_KEY;
+                const decoded: any = jwt.verify(token, secret!, { algorithms: ['HS256'] });
+                userId = decoded.id;
+            } else if (req.cookies?.accessToken) {
+                // Ambil dari cookie jika tidak ada di header
+                const token = req.cookies.accessToken;
+                const secret = process.env.SECRET_KEY;
+                const decoded: any = jwt.verify(token, secret!, { algorithms: ['HS256'] });
+                userId = decoded.id;
+            } else {
+                throw new ResponseError(401, "UNAUTHORIZED", "No authorization found");
             }
 
-            const token = authorization.split('Bearer')[1]?.trim();
-            const secret = process.env.SECRET_KEY;
-
-            const decoded: any = jwt.verify(token, secret!);
-            const userId = decoded.id;
-
-            const response: BasicResponse = await Auth_service.logout(userId);
+            const response: BasicResponse = await Auth_service.logout(userId, res);
 
             res.status(200).json({
                 ...defaultResponse,
@@ -96,7 +113,6 @@ class AuthController {
             next(e);
         }
     }
-
 }
 
 export default AuthController

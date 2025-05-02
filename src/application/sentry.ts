@@ -45,6 +45,7 @@ export class SentryService {
         }
 
         SentryCore.init({
+            release: process.env.NODE_ENV + "." + process.env.APP_NAME + "@" + process.env.APP_VERSION,
             dsn: process.env.SENTRY_DSN,
             integrations,
             tracesSampleRate: 1.0,

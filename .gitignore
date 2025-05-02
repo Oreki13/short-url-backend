@@ -22,3 +22,4 @@ dev.db
 .prisma
 # Sentry Config File
 .sentryclirc
+/logs

@@ -6,6 +6,7 @@ import supertest from "supertest";
 import { web } from "../src/application/web";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
+import { logger } from "../src/application/logger";
 
 function timeout(time: number) {
     return new Promise(resolve => setTimeout(resolve, time));
@@ -59,7 +60,7 @@ export class ShortLinkTest {
     }
 
     static async deleteAddedShortLink() {
-        const checkIfAvail = await prismaClient.dataUrl.findUnique({
+        const checkIfAvail = await prismaClient.dataUrl.findFirst({
             where: {
                 title: "test_unit_test",
                 user: {
@@ -71,10 +72,7 @@ export class ShortLinkTest {
         if (checkIfAvail !== null) {
             await prismaClient.dataUrl.delete({
                 where: {
-                    title: "test_unit_test",
-                    user: {
-                        email: "superadmin@mail.com"
-                    }
+                    id: checkIfAvail.id
                 }
             })
         }
@@ -82,18 +80,94 @@ export class ShortLinkTest {
 }
 
 export class AuthUserTest {
-    static async login(email: string): Promise<{ id: string, token: string }> {
+    static async login(email: string): Promise<{ id: string, token: string, csrfToken: string, cookie: string }> {
+        // Use shared session when email is superadmin@mail.com instead of making a new login request
+        if (email === "superadmin@mail.com" && global.testSession.sharedToken && global.testSession.sharedUserId && global.testSession.sharedCsrfToken) {
+            logger.info(`Using shared login session for ${email}`);
+            return {
+                id: global.testSession.sharedUserId,
+                token: global.testSession.sharedToken,
+                csrfToken: global.testSession.sharedCsrfToken,
+                cookie: global.testSession.cookies || ''
+            };
+        }
+
+        // For other users, use the regular login flow
+        logger.info(`Creating new login session for ${email}`);
+
+        // Perform login
         const login = await supertest(web)
-            .post("/v1/auth/login")
+            .post("/api/v1/auth/login")
             .send({
                 email: email,
                 password: "123"
             });
-        const decode: any = jwt.decode(login.body.data.access_token)
-        return {
-            id: decode!.id,
-            token: login.body.data.access_token,
+
+        if (login.status !== 200) {
+            logger.error(`Login failed with status ${login.status}: ${JSON.stringify(login.body)}`);
+            throw new Error(`Login failed with status ${login.status}: ${JSON.stringify(login.body)}`);
         }
+
+        // Store cookies from login response
+        const loginCookies = login.headers['set-cookie'];
+        if (loginCookies && Array.isArray(loginCookies)) {
+            global.testSession = global.testSession || {};
+            global.testSession.cookies = loginCookies.join('; ');
+        } else {
+            logger.info('No cookies in login response');
+        }
+
+        // Get access token and user ID
+        const accessToken = login.body.data?.access_token;
+        if (!accessToken) {
+            logger.error(`Login response does not contain access_token: ${JSON.stringify(login.body)}`);
+            throw new Error("Login failed: No access token returned");
+        }
+
+        const decode: any = jwt.decode(accessToken);
+        if (!decode || !decode.id) {
+            throw new Error("Failed to decode access token");
+        }
+
+        // Get CSRF token with the user's credentials
+        const csrfReq = supertest(web)
+            .get("/csrf-token")
+            .set("Authorization", `Bearer ${accessToken}`)
+            .set("x-control-user", decode.id);
+
+        // Include cookies from login
+        if (global.testSession?.cookies) {
+            csrfReq.set("Cookie", global.testSession.cookies);
+        }
+
+        const csrfResponse = await csrfReq;
+
+        // Update cookies from CSRF response
+        const csrfCookies = csrfResponse.headers['set-cookie'];
+        let cookieString = '';
+        if (csrfCookies && Array.isArray(csrfCookies)) {
+            global.testSession = global.testSession || {};
+            cookieString = csrfCookies.join('; ');
+            global.testSession.cookies = cookieString
+        }
+
+        // Get CSRF token from response
+        const headerToken = csrfResponse.headers['x-csrf-token'];
+        const bodyToken = csrfResponse.body.data?.csrfToken;
+        const csrfToken = bodyToken || headerToken || '';
+
+        if (!csrfToken) {
+            logger.error(`Failed to get CSRF token: ${JSON.stringify(csrfResponse.body)}`);
+        } else {
+            logger.info(`Login successful for ${email}, CSRF token: ${csrfToken}`);
+        }
+
+        return {
+            id: decode.id,
+            token: accessToken,
+            csrfToken: csrfToken,
+            cookie: cookieString
+        };
     }
 }
 
@@ -150,11 +224,18 @@ export class UserTest {
     }
 
     static async deleteUser() {
-        await prismaClient.user.delete({
+        const checkIfAvail = await prismaClient.user.findFirst({
             where: {
                 email: "user_unit_test@example.com"
             }
         })
+        if (checkIfAvail !== null) {
+            await prismaClient.user.delete({
+                where: {
+                    email: "user_unit_test@example.com"
+                }
+            })
+        }
     }
 
     static async createOneUser() {

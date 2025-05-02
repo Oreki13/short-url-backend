@@ -5,14 +5,14 @@ import jwt from "jsonwebtoken";
 import { AuthUserTest, ShortLinkTest } from "./test_util";
 import { prismaClient } from "../src/application/database";
 
-describe("POST /v1/short/", () => {
+describe("POST /api/v1/short/", () => {
     afterAll(async () => {
         await ShortLinkTest.deleteMultiple();
     })
 
     it("should be reject store if header is invalid", async () => {
         const res = await supertest(web)
-            .post("/v1/short/")
+            .post("/api/v1/short/")
             .set("authorization", "")
             .set("x-control-user", "")
             .send({
@@ -21,37 +21,39 @@ describe("POST /v1/short/", () => {
                 path: "",
             });
 
-        logger.debug(res.body);
-        expect(res.status).toBe(401)
+        logger.info(res.body);
+        expect(res.status).toBe(403)
         expect(res.body.status).toBe("ERROR")
-        expect(res.body.code).toBe("UNAUTHORIZED")
+        expect(res.body.code).toBe("CSRF_ERROR")
     })
 
     it("should be reject store if body is invalid", async () => {
-        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("superadmin@mail.com");
         const response = await supertest(web)
-            .post("/v1/short/")
+            .post("/api/v1/short/")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
+            .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
             .send({
                 title: "",
                 destination: "",
                 path: "",
             });
-
-        logger.debug(response.body);
         expect(response.status).toBe(400)
         expect(response.body.status).toBe("ERROR")
         expect(response.body.code).toBe("ERROR_VALIDATION")
     })
 
     it("should be success store", async () => {
-        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("superadmin@mail.com");
 
         const response = await supertest(web)
-            .post("/v1/short/")
+            .post("/api/v1/short/")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
+            .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
             .send({
                 title: "test_unit_test",
                 destination: "https://google.com/",
@@ -65,12 +67,14 @@ describe("POST /v1/short/", () => {
     })
 
     it("should be failed store duplicate endpoint", async () => {
-        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("superadmin@mail.com");
 
         const response = await supertest(web)
-            .post("/v1/short/")
+            .post("/api/v1/short/")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
+            .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
             .send({
                 title: "test_unit_test",
                 destination: "https://google.com/",
@@ -82,13 +86,16 @@ describe("POST /v1/short/", () => {
         expect(response.body.status).toBe("ERROR")
         expect(response.body.code).toBe("DATA_ALREADY_EXIST")
     })
+
     it("should be failed store because title already exist", async () => {
-        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("superadmin@mail.com");
 
         const response = await supertest(web)
-            .post("/v1/short/")
+            .post("/api/v1/short/")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
+            .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
             .send({
                 title: "test_unit_test",
                 destination: "https://google.com/",
@@ -102,11 +109,13 @@ describe("POST /v1/short/", () => {
     })
 
     it("should be failed store because path already exist", async () => {
-        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("superadmin@mail.com");
         const response = await supertest(web)
-            .post("/v1/short/")
+            .post("/api/v1/short/")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
+            .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
             .send({
                 title: "test_unit_test_2",
                 destination: "https://google.com/",
@@ -120,11 +129,13 @@ describe("POST /v1/short/", () => {
     })
 
     it("should be success store other data", async () => {
-        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("superadmin@mail.com");
         const response = await supertest(web)
-            .post("/v1/short/")
+            .post("/api/v1/short/")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
+            .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
             .send({
                 title: "test_unit_test_2",
                 destination: "https://google.com/",
@@ -138,7 +149,7 @@ describe("POST /v1/short/", () => {
     })
 })
 
-describe("GET /v1/short/", () => {
+describe("GET /api/v1/short/", () => {
     beforeAll(async () => {
         await ShortLinkTest.addMultipleData();
     })
@@ -148,7 +159,7 @@ describe("GET /v1/short/", () => {
 
     it("should be reject get if header is invalid", async () => {
         const res = await supertest(web)
-            .get("/v1/short/")
+            .get("/api/v1/short/")
             .set("authorization", "")
             .set("x-control-user", "")
             .send({
@@ -165,7 +176,7 @@ describe("GET /v1/short/", () => {
     it("should be success get with 5 limit and page 1", async () => {
         const { id, token } = await AuthUserTest.login("superadmin@mail.com");
         const res = await supertest(web)
-            .get("/v1/short/")
+            .get("/api/v1/short/")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
             .query({
@@ -186,7 +197,7 @@ describe("GET /v1/short/", () => {
     it("should be success get with 5 limit and page 2", async () => {
         const { id, token } = await AuthUserTest.login("superadmin@mail.com");
         const res = await supertest(web)
-            .get("/v1/short/")
+            .get("/api/v1/short/")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
             .query({
@@ -207,7 +218,7 @@ describe("GET /v1/short/", () => {
     it("should be success get with 10 limit and page 1", async () => {
         const { id, token } = await AuthUserTest.login("superadmin@mail.com");
         const res = await supertest(web)
-            .get("/v1/short/")
+            .get("/api/v1/short/")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
             .query({
@@ -228,7 +239,7 @@ describe("GET /v1/short/", () => {
     it("should be success get with 10 limit and page 2", async () => {
         const { id, token } = await AuthUserTest.login("superadmin@mail.com");
         const res = await supertest(web)
-            .get("/v1/short/")
+            .get("/api/v1/short/")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
             .query({
@@ -249,7 +260,7 @@ describe("GET /v1/short/", () => {
     it("should be success search title", async () => {
         const { id, token } = await AuthUserTest.login("superadmin@mail.com");
         const res = await supertest(web)
-            .get("/v1/short/")
+            .get("/api/v1/short/")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
             .query({
@@ -271,7 +282,7 @@ describe("GET /v1/short/", () => {
     it("should be success sort asc", async () => {
         const { id, token } = await AuthUserTest.login("superadmin@mail.com");
         const res = await supertest(web)
-            .get("/v1/short/")
+            .get("/api/v1/short/")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
             .query({
@@ -294,7 +305,7 @@ describe("GET /v1/short/", () => {
     it("should be success sort desc", async () => {
         const { id, token } = await AuthUserTest.login("superadmin@mail.com");
         const res = await supertest(web)
-            .get("/v1/short/")
+            .get("/api/v1/short/")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
             .query({
@@ -315,7 +326,7 @@ describe("GET /v1/short/", () => {
     })
 })
 
-describe("PUT /v1/short/:id", () => {
+describe("PUT /api/v1/short/:id", () => {
     beforeAll(async () => {
         await ShortLinkTest.addMultipleData();
     })
@@ -325,33 +336,37 @@ describe("PUT /v1/short/:id", () => {
 
     it("Should be failed no header", async () => {
         const res = await supertest(web)
-            .put("/v1/short/tes")
+            .put("/api/v1/short/tes")
 
         logger.debug(res.body);
-        expect(res.status).toBe(401)
+        expect(res.status).toBe(403)
         expect(res.body.status).toBe("ERROR")
-        expect(res.body.code).toBe("UNAUTHORIZED")
+        expect(res.body.code).toBe("CSRF_ERROR")
     })
 
     it("Should be failed no param send on endpoint", async () => {
-        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("superadmin@mail.com");
 
         const res = await supertest(web)
-            .put("/v1/short/")
+            .put("/api/v1/short/")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
+            .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
 
         logger.debug(res.body);
         expect(res.status).toBe(404)
     })
 
     it("Should be failed no data found", async () => {
-        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("superadmin@mail.com");
 
         const res = await supertest(web)
-            .put("/v1/short/tes")
+            .put("/api/v1/short/tes")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
+            .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
             .send({
                 "title": "tes"
             })
@@ -363,8 +378,8 @@ describe("PUT /v1/short/:id", () => {
     })
 
     it("Should be failed no data found because deleted", async () => {
-        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
-        const findData = await prismaClient.dataUrl.findUnique({
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("superadmin@mail.com");
+        const findData = await prismaClient.dataUrl.findFirst({
             where: {
                 title: "test_unit_test 1"
             },
@@ -373,14 +388,18 @@ describe("PUT /v1/short/:id", () => {
             }
         })
         await supertest(web)
-            .delete("/v1/short/" + findData!.id)
+            .delete("/api/v1/short/" + findData!.id)
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
+            .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
 
         const res = await supertest(web)
-            .put("/v1/short/" + findData!.id)
+            .put("/api/v1/short/" + findData!.id)
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
+            .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
             .send({
                 "title": "tes"
             })
@@ -392,8 +411,8 @@ describe("PUT /v1/short/:id", () => {
     })
 
     it("Should be success edited", async () => {
-        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
-        const findData = await prismaClient.dataUrl.findUnique({
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("superadmin@mail.com");
+        const findData = await prismaClient.dataUrl.findFirst({
             where: {
                 title: "test_unit_test 0"
             },
@@ -402,9 +421,11 @@ describe("PUT /v1/short/:id", () => {
             }
         })
         const res = await supertest(web)
-            .put("/v1/short/" + findData!.id)
+            .put("/api/v1/short/" + findData!.id)
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
+            .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
             .send({
                 title: "test_unit_test_edited",
             })
@@ -414,7 +435,7 @@ describe("PUT /v1/short/:id", () => {
         expect(res.body.status).toBe("OK")
         expect(res.body.code).toBe("SUCCESS_EDIT_LINK")
 
-        const findDataEdited = await prismaClient.dataUrl.findUnique({
+        const findDataEdited = await prismaClient.dataUrl.findFirst({
             where: {
                 title: "test_unit_test_edited"
             },
@@ -427,7 +448,7 @@ describe("PUT /v1/short/:id", () => {
     })
 })
 
-describe("DELETE /v1/short/:id", () => {
+describe("DELETE /api/v1/short/:id", () => {
     beforeAll(async () => {
         await ShortLinkTest.addMultipleData();
     });
@@ -437,33 +458,37 @@ describe("DELETE /v1/short/:id", () => {
 
     it("Should be failed no header", async () => {
         const res = await supertest(web)
-            .delete("/v1/short/")
+            .delete("/api/v1/short/")
 
         logger.debug(res.body);
-        expect(res.status).toBe(401)
+        expect(res.status).toBe(403)
         expect(res.body.status).toBe("ERROR")
-        expect(res.body.code).toBe("UNAUTHORIZED")
+        expect(res.body.code).toBe("CSRF_ERROR")
     })
 
     it("Should be failed no param send on endpoint", async () => {
-        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("superadmin@mail.com");
 
         const res = await supertest(web)
-            .delete("/v1/short/")
+            .delete("/api/v1/short/")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
+            .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
 
         logger.debug(res.body);
         expect(res.status).toBe(404)
     })
 
     it("Should be failed no data found", async () => {
-        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("superadmin@mail.com");
 
         const res = await supertest(web)
-            .delete("/v1/short/tes")
+            .delete("/api/v1/short/tes")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
+            .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
 
         logger.debug(res.body);
         expect(res.status).toBe(404)
@@ -472,8 +497,8 @@ describe("DELETE /v1/short/:id", () => {
     })
 
     it("Should be success delete data", async () => {
-        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
-        const findData = await prismaClient.dataUrl.findUnique({
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("superadmin@mail.com");
+        const findData = await prismaClient.dataUrl.findFirst({
             where: {
                 title: "test_unit_test 0"
             },
@@ -483,9 +508,11 @@ describe("DELETE /v1/short/:id", () => {
         })
 
         const res = await supertest(web)
-            .delete("/v1/short/" + findData!.id)
+            .delete("/api/v1/short/" + findData!.id)
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
+            .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
 
         logger.debug(res.body);
         expect(res.status).toBe(200)
@@ -493,9 +520,11 @@ describe("DELETE /v1/short/:id", () => {
         expect(res.body.code).toBe("SUCCESS_DELETE_LINK")
 
         const resAfterDelete = await supertest(web)
-            .delete("/v1/short/" + findData!.id)
+            .delete("/api/v1/short/" + findData!.id)
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
+            .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
 
         logger.debug(resAfterDelete.body);
         expect(resAfterDelete.status).toBe(404)
@@ -504,12 +533,14 @@ describe("DELETE /v1/short/:id", () => {
     })
 
     it("should be success store deleted data", async () => {
-        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("superadmin@mail.com");
 
         const response = await supertest(web)
-            .post("/v1/short/")
+            .post("/api/v1/short/")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
+            .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
             .send({
                 title: "test_unit_test 0",
                 destination: "https://google.com/",

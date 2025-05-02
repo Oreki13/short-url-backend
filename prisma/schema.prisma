@@ -36,7 +36,7 @@ model RoleUser {
 
 model DataUrl {
   id           String   @id @unique @default(uuid())
-  title        String   @unique @db.VarChar(2555)
+  title        String   @db.VarChar(2555)
   destination  String
   path         String   @unique @db.VarChar(2555)
   count_clicks Int
