@@ -80,14 +80,15 @@ export class ShortLinkTest {
 }
 
 export class AuthUserTest {
-    static async login(email: string): Promise<{ id: string, token: string, csrfToken: string }> {
+    static async login(email: string): Promise<{ id: string, token: string, csrfToken: string, cookie: string }> {
         // Use shared session when email is superadmin@mail.com instead of making a new login request
         if (email === "superadmin@mail.com" && global.testSession.sharedToken && global.testSession.sharedUserId && global.testSession.sharedCsrfToken) {
             logger.info(`Using shared login session for ${email}`);
             return {
                 id: global.testSession.sharedUserId,
                 token: global.testSession.sharedToken,
-                csrfToken: global.testSession.sharedCsrfToken
+                csrfToken: global.testSession.sharedCsrfToken,
+                cookie: global.testSession.cookies || ''
             };
         }
 
@@ -143,9 +144,11 @@ export class AuthUserTest {
 
         // Update cookies from CSRF response
         const csrfCookies = csrfResponse.headers['set-cookie'];
+        let cookieString = '';
         if (csrfCookies && Array.isArray(csrfCookies)) {
             global.testSession = global.testSession || {};
-            global.testSession.cookies = csrfCookies.join('; ');
+            cookieString = csrfCookies.join('; ');
+            global.testSession.cookies = cookieString
         }
 
         // Get CSRF token from response
@@ -162,7 +165,8 @@ export class AuthUserTest {
         return {
             id: decode.id,
             token: accessToken,
-            csrfToken: csrfToken
+            csrfToken: csrfToken,
+            cookie: cookieString
         };
     }
 }
@@ -220,11 +224,18 @@ export class UserTest {
     }
 
     static async deleteUser() {
-        await prismaClient.user.delete({
+        const checkIfAvail = await prismaClient.user.findFirst({
             where: {
                 email: "user_unit_test@example.com"
             }
         })
+        if (checkIfAvail !== null) {
+            await prismaClient.user.delete({
+                where: {
+                    email: "user_unit_test@example.com"
+                }
+            })
+        }
     }
 
     static async createOneUser() {

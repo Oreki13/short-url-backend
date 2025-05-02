@@ -5,57 +5,6 @@ import jwt from "jsonwebtoken";
 import { AuthUserTest, ShortLinkTest } from "./test_util";
 import { prismaClient } from "../src/application/database";
 
-// Helper function to get CSRF token
-async function getCsrfToken(authToken?: string, userId?: string) {
-    // If we have a shared token, use that first
-    if (global.testSession.sharedCsrfToken) {
-        logger.info(`Using shared CSRF token: ${global.testSession.sharedCsrfToken}`);
-        return global.testSession.sharedCsrfToken;
-    }
-
-    // Prepare request to get CSRF token
-    const req = supertest(web).get("/csrf-token");
-
-    // Use shared credentials or provided credentials
-    const token = authToken || global.testSession.sharedToken;
-    const user = userId || global.testSession.sharedUserId;
-
-    if (token && user) {
-        req.set('Authorization', `Bearer ${token}`);
-        req.set('x-control-user', user);
-        logger.debug(`Using credentials for CSRF token request: ${user}`);
-    }
-
-    // Add session cookies if available
-    if (global.testSession?.cookies) {
-        req.set('Cookie', global.testSession.cookies);
-    }
-
-    // Send request
-    const csrfResponse = await req;
-
-    // Store cookies from response
-    const setCookieHeader = csrfResponse.headers['set-cookie'];
-    if (setCookieHeader && Array.isArray(setCookieHeader)) {
-        global.testSession = global.testSession || {};
-        global.testSession.cookies = setCookieHeader.join('; ');
-        logger.debug(`Updated session cookies: ${global.testSession.cookies?.substring(0, 50)}...`);
-    }
-
-    // Get token from header and body response
-    const headerToken = csrfResponse.headers['x-csrf-token'];
-    const bodyToken = csrfResponse.body.data?.csrfToken;
-    const csrfToken = bodyToken || headerToken || '';
-
-    // Save the token in the shared session for future use
-    if (csrfToken) {
-        global.testSession.sharedCsrfToken = csrfToken;
-    }
-
-    logger.info(`CSRF Token generated: ${csrfToken}`);
-    return csrfToken;
-}
-
 describe("POST /api/v1/short/", () => {
     afterAll(async () => {
         await ShortLinkTest.deleteMultiple();
@@ -72,39 +21,39 @@ describe("POST /api/v1/short/", () => {
                 path: "",
             });
 
-        logger.debug(res.body);
-        expect(res.status).toBe(401)
+        logger.info(res.body);
+        expect(res.status).toBe(403)
         expect(res.body.status).toBe("ERROR")
-        expect(res.body.code).toBe("UNAUTHORIZED")
+        expect(res.body.code).toBe("CSRF_ERROR")
     })
 
     it("should be reject store if body is invalid", async () => {
-        const { id, token, csrfToken } = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("superadmin@mail.com");
         const response = await supertest(web)
             .post("/api/v1/short/")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
             .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
             .send({
                 title: "",
                 destination: "",
                 path: "",
             });
-
-        logger.debug(response.body);
         expect(response.status).toBe(400)
         expect(response.body.status).toBe("ERROR")
         expect(response.body.code).toBe("ERROR_VALIDATION")
     })
 
     it("should be success store", async () => {
-        const { id, token, csrfToken } = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("superadmin@mail.com");
 
         const response = await supertest(web)
             .post("/api/v1/short/")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
             .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
             .send({
                 title: "test_unit_test",
                 destination: "https://google.com/",
@@ -118,13 +67,14 @@ describe("POST /api/v1/short/", () => {
     })
 
     it("should be failed store duplicate endpoint", async () => {
-        const { id, token, csrfToken } = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("superadmin@mail.com");
 
         const response = await supertest(web)
             .post("/api/v1/short/")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
             .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
             .send({
                 title: "test_unit_test",
                 destination: "https://google.com/",
@@ -138,13 +88,14 @@ describe("POST /api/v1/short/", () => {
     })
 
     it("should be failed store because title already exist", async () => {
-        const { id, token, csrfToken } = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("superadmin@mail.com");
 
         const response = await supertest(web)
             .post("/api/v1/short/")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
             .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
             .send({
                 title: "test_unit_test",
                 destination: "https://google.com/",
@@ -158,12 +109,13 @@ describe("POST /api/v1/short/", () => {
     })
 
     it("should be failed store because path already exist", async () => {
-        const { id, token, csrfToken } = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("superadmin@mail.com");
         const response = await supertest(web)
             .post("/api/v1/short/")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
             .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
             .send({
                 title: "test_unit_test_2",
                 destination: "https://google.com/",
@@ -177,12 +129,13 @@ describe("POST /api/v1/short/", () => {
     })
 
     it("should be success store other data", async () => {
-        const { id, token, csrfToken } = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("superadmin@mail.com");
         const response = await supertest(web)
             .post("/api/v1/short/")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
             .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
             .send({
                 title: "test_unit_test_2",
                 destination: "https://google.com/",
@@ -386,31 +339,34 @@ describe("PUT /api/v1/short/:id", () => {
             .put("/api/v1/short/tes")
 
         logger.debug(res.body);
-        expect(res.status).toBe(401)
+        expect(res.status).toBe(403)
         expect(res.body.status).toBe("ERROR")
-        expect(res.body.code).toBe("UNAUTHORIZED")
+        expect(res.body.code).toBe("CSRF_ERROR")
     })
 
     it("Should be failed no param send on endpoint", async () => {
-        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("superadmin@mail.com");
 
         const res = await supertest(web)
             .put("/api/v1/short/")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
+            .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
 
         logger.debug(res.body);
         expect(res.status).toBe(404)
     })
 
     it("Should be failed no data found", async () => {
-        const { id, token, csrfToken } = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("superadmin@mail.com");
 
         const res = await supertest(web)
             .put("/api/v1/short/tes")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
             .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
             .send({
                 "title": "tes"
             })
@@ -422,7 +378,7 @@ describe("PUT /api/v1/short/:id", () => {
     })
 
     it("Should be failed no data found because deleted", async () => {
-        const { id, token, csrfToken } = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("superadmin@mail.com");
         const findData = await prismaClient.dataUrl.findFirst({
             where: {
                 title: "test_unit_test 1"
@@ -436,12 +392,14 @@ describe("PUT /api/v1/short/:id", () => {
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
             .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
 
         const res = await supertest(web)
             .put("/api/v1/short/" + findData!.id)
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
             .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
             .send({
                 "title": "tes"
             })
@@ -453,7 +411,7 @@ describe("PUT /api/v1/short/:id", () => {
     })
 
     it("Should be success edited", async () => {
-        const { id, token, csrfToken } = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("superadmin@mail.com");
         const findData = await prismaClient.dataUrl.findFirst({
             where: {
                 title: "test_unit_test 0"
@@ -467,6 +425,7 @@ describe("PUT /api/v1/short/:id", () => {
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
             .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
             .send({
                 title: "test_unit_test_edited",
             })
@@ -502,31 +461,34 @@ describe("DELETE /api/v1/short/:id", () => {
             .delete("/api/v1/short/")
 
         logger.debug(res.body);
-        expect(res.status).toBe(401)
+        expect(res.status).toBe(403)
         expect(res.body.status).toBe("ERROR")
-        expect(res.body.code).toBe("UNAUTHORIZED")
+        expect(res.body.code).toBe("CSRF_ERROR")
     })
 
     it("Should be failed no param send on endpoint", async () => {
-        const { id, token } = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("superadmin@mail.com");
 
         const res = await supertest(web)
             .delete("/api/v1/short/")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
+            .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
 
         logger.debug(res.body);
         expect(res.status).toBe(404)
     })
 
     it("Should be failed no data found", async () => {
-        const { id, token, csrfToken } = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("superadmin@mail.com");
 
         const res = await supertest(web)
             .delete("/api/v1/short/tes")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
             .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
 
         logger.debug(res.body);
         expect(res.status).toBe(404)
@@ -535,7 +497,7 @@ describe("DELETE /api/v1/short/:id", () => {
     })
 
     it("Should be success delete data", async () => {
-        const { id, token, csrfToken } = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("superadmin@mail.com");
         const findData = await prismaClient.dataUrl.findFirst({
             where: {
                 title: "test_unit_test 0"
@@ -550,6 +512,7 @@ describe("DELETE /api/v1/short/:id", () => {
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
             .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
 
         logger.debug(res.body);
         expect(res.status).toBe(200)
@@ -561,6 +524,7 @@ describe("DELETE /api/v1/short/:id", () => {
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
             .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
 
         logger.debug(resAfterDelete.body);
         expect(resAfterDelete.status).toBe(404)
@@ -569,13 +533,14 @@ describe("DELETE /api/v1/short/:id", () => {
     })
 
     it("should be success store deleted data", async () => {
-        const { id, token, csrfToken } = await AuthUserTest.login("superadmin@mail.com");
+        const { id, token, csrfToken, cookie } = await AuthUserTest.login("superadmin@mail.com");
 
         const response = await supertest(web)
             .post("/api/v1/short/")
             .set("authorization", "Bearer " + token)
             .set("x-control-user", id)
             .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
             .send({
                 title: "test_unit_test 0",
                 destination: "https://google.com/",

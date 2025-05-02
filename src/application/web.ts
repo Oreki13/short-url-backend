@@ -61,28 +61,31 @@ web.use(session({
     }
 }));
 
-// Simpan middleware CSRF di variabel untuk digunakan secara kondisional
-const csrfProtection = lusca.csrf();
+if (process.env.NODE_ENV !== "development") {
+    // Simpan middleware CSRF di variabel untuk digunakan secara kondisional
+    const csrfProtection = lusca.csrf();
 
-// Middleware untuk menggunakan CSRF protection secara kondisional
-web.use((req, res, next) => {
-    // Endpoint yang tidak memerlukan CSRF protection
-    const csrfExemptPaths = [
-        '/api/v1/auth/login',
-        '/api/v1/auth/refresh-token'
-    ];
+    // Middleware untuk menggunakan CSRF protection secara kondisional
+    web.use((req, res, next) => {
+        // Endpoint yang tidak memerlukan CSRF protection
+        const csrfExemptPaths = [
+            '/api/v1/auth/login',
+            '/api/v1/auth/refresh-token'
+        ];
 
-    // Lewati CSRF check untuk endpoint yang dikecualikan
-    if (csrfExemptPaths.includes(req.path)) {
-        return next();
-    }
+        // Lewati CSRF check untuk endpoint yang dikecualikan
+        if (csrfExemptPaths.includes(req.path)) {
+            return next();
+        }
 
-    // Terapkan CSRF protection untuk endpoint lainnya
-    return csrfProtection(req, res, next);
-});
+        // Terapkan CSRF protection untuk endpoint lainnya
+        return csrfProtection(req, res, next);
+    });
 
-// Middleware untuk menyediakan CSRF token di semua response header
-web.use(csrfTokenMiddleware);
+    // Middleware untuk menyediakan CSRF token di semua response header
+    web.use(csrfTokenMiddleware);
+}
+
 
 web.use(helmet({
     contentSecurityPolicy: {

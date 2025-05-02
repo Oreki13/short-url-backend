@@ -60,19 +60,6 @@ async function getCsrfToken(authToken?: string, userId?: string) {
     return csrfToken;
 }
 
-// Fungsi untuk mendapatkan cookies dari response
-function extractCookies(response: any) {
-    const cookies: Record<string, string> = {};
-    const cookieHeader = response.headers['set-cookie'];
-    if (cookieHeader) {
-        cookieHeader.forEach((cookie: string) => {
-            const parts = cookie.split(';')[0].split('=');
-            cookies[parts[0]] = parts[1] || '';
-        });
-    }
-    return cookies;
-}
-
 describe('Auth API', () => {
 
     // Setup test database before running tests
@@ -358,7 +345,7 @@ describe('Auth API', () => {
             expect(response.body.code).toBe('UNAUTHORIZED');
         });
 
-        it('should return 500 when token is invalid', async () => {
+        it('should return 403 when token is invalid', async () => {
             // Get a CSRF token anyway for the request
             csrfToken = await getCsrfToken();
 
@@ -367,7 +354,7 @@ describe('Auth API', () => {
                 .set('Authorization', 'Bearer invalid-token')
                 .set('X-CSRF-Token', csrfToken);
 
-            expect(response.status).toBe(500);
+            expect(response.status).toBe(403);
         });
     });
 

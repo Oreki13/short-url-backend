@@ -30,19 +30,23 @@ class ApiLoggerTransport extends Transport {
     log(info: any, callback: () => void) {
         // Only send error and fatal logs to API
         if (info.level === 'error' || info.level === 'fatal') {
-            if (process.env.ENABLE_LOGGER_API === 'true' && process.env.LOGGER_API_DOMAIN) {
+            if (process.env.ENABLE_LOGGER_API === 'true' && process.env.LOGGER_API_DOMAIN && process.env.NODE_ENV !== 'test') {
                 const apiUrl = `${process.env.LOGGER_API_DOMAIN}/api/v1/logs/telegram`;
 
                 // Format the error message
                 const errorMessage = typeof info.message === 'string'
                     ? info.message
                     : JSON.stringify(info.message);
+                const message = {
+                    message: errorMessage,
+                    level: info.level,
+                    timestamp: info.timestamp,
+                }
 
                 // Prepare payload
                 const payload = {
                     service: process.env.NODE_ENV + "." + process.env.APP_NAME + "@" + process.env.APP_VERSION || 'shorturl-backend',
-                    message: errorMessage,
-                    metadata: info
+                    message: JSON.stringify(message),
                 };
 
                 // Send log to API
