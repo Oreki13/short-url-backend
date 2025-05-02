@@ -18,7 +18,6 @@ jobs:
           sarif_file: results.sarif
   test:
     runs-on: ubuntu-latest
-    name: unit tests
     services:
       postgres:
         image: postgres
