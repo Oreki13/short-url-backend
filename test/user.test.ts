@@ -136,7 +136,7 @@ describe("POST /api/v1/user/create", () => {
     })
 
     it("Should be error with no header", async () => {
-        const { id, csrfToken, cookie } = await AuthUserTest.login('user@mail.com');
+        const { id, csrfToken, cookie } = await AuthUserTest.login('admin@mail.com');
         const response = await supertest(web)
             .post("/api/v1/user/create")
             .set("authorization", "")
@@ -289,7 +289,7 @@ describe("POST /api/v1/user/create", () => {
                 name: "test",
                 email: "test@example.com",
                 password: "123",
-                role_id: "123"
+                role_id: "xxx!@1@"
             })
 
         logger.debug(response.body);

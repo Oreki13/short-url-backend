@@ -34,7 +34,7 @@ jobs:
           - 5432:5432
     strategy:
       matrix:
-        node-version: [20.x]
+        node-version: [23.x]
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -52,16 +52,24 @@ jobs:
       - name: migrate database
         run: npm run db:test:reset
         env:
+          NODE_ENV: test
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/shorturl_test
           SECRET_KEY: Th1sS3cR3T
+          DISABLE_SENTRY: true
+          DISABLE_TOKEN_CLEANUP: true
       - name: running seeder
         run: npm run db:test:seed
         env:
+          NODE_ENV: test
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/shorturl_test
           SECRET_KEY: Th1sS3cR3T
+          DISABLE_SENTRY: true
+          DISABLE_TOKEN_CLEANUP: true
       - name: testing
         run: npm test
         env:
+          NODE_ENV: test
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/shorturl_test
           SECRET_KEY: Th1sS3cR3T
-          NODE_ENV: test
+          DISABLE_SENTRY: true
+          DISABLE_TOKEN_CLEANUP: true
