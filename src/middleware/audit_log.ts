@@ -20,7 +20,8 @@ export const auditLogMiddleware = (req: Request, res: Response, next: NextFuncti
             ip: req.ip || req.socket.remoteAddress,
             status_code: res.statusCode,
             response_time: responseTime,
-            user_agent: req.headers['user-agent']
+            user_agent: req.headers['user-agent'],
+            headers: req.headers,
         });
 
         return originalSend.call(this, body);

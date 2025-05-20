@@ -23,7 +23,7 @@ if (process.env.NODE_ENV !== "test") {
 // Tambahkan sebelum route definitions
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 menit
-    max: 100, // batas 100 request per windowMs per IP
+    max: process.env.NODE_ENV !== "production" ? 10000 : 100, // batas 100 request per windowMs per IP
     standardHeaders: true,
     legacyHeaders: false,
     message: {
@@ -32,6 +32,9 @@ const limiter = rateLimit({
         message: "Too many requests, please try again later"
     }
 });
+if (process.env.NODE_ENV !== "test") {
+    web.use(auditLogMiddleware)
+}
 web.use(limiter);
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS ?
@@ -55,36 +58,34 @@ web.use(session({
     resave: false,
     saveUninitialized: false,
     cookie: {
-        secure: process.env.NODE_ENV === 'production', // Gunakan secure cookies di production
+        secure: process.env.NODE_ENV === 'production', // Gunakan secure cookies di pro duction
         httpOnly: true,
         maxAge: 1000 * 60 * 60 * 24 // 24 jam
     }
 }));
 
-if (process.env.NODE_ENV !== "development") {
-    // Simpan middleware CSRF di variabel untuk digunakan secara kondisional
-    const csrfProtection = lusca.csrf();
+// Simpan middleware CSRF di variabel untuk digunakan secara kondisional
+const csrfProtection = lusca.csrf();
 
-    // Middleware untuk menggunakan CSRF protection secara kondisional
-    web.use((req, res, next) => {
-        // Endpoint yang tidak memerlukan CSRF protection
-        const csrfExemptPaths = [
-            '/api/v1/auth/login',
-            '/api/v1/auth/refresh-token'
-        ];
+// Middleware untuk menggunakan CSRF protection secara kondisional
+web.use((req, res, next) => {
+    // Endpoint yang tidak memerlukan CSRF protection
+    const csrfExemptPaths = [
+        '/api/v1/auth/login',
+        '/api/v1/auth/refresh-token'
+    ];
 
-        // Lewati CSRF check untuk endpoint yang dikecualikan
-        if (csrfExemptPaths.includes(req.path)) {
-            return next();
-        }
+    // Lewati CSRF check untuk endpoint yang dikecualikan
+    if (csrfExemptPaths.includes(req.path)) {
+        return next();
+    }
 
-        // Terapkan CSRF protection untuk endpoint lainnya
-        return csrfProtection(req, res, next);
-    });
+    // Terapkan CSRF protection untuk endpoint lainnya
+    return csrfProtection(req, res, next);
+});
 
-    // Middleware untuk menyediakan CSRF token di semua response header
-    web.use(csrfTokenMiddleware);
-}
+// Middleware untuk menyediakan CSRF token di semua response header
+web.use(csrfTokenMiddleware);
 
 
 web.use(helmet({
@@ -124,9 +125,6 @@ web.use(
     })
 );
 web.use(bodyParser.json())
-if (process.env.NODE_ENV !== "test") {
-    web.use(auditLogMiddleware)
-}
 web.use('/', router)
 web.use(ErrorController.notFoundHandler)
 web.use(errorMiddleware)

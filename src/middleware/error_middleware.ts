@@ -30,11 +30,6 @@ export const errorMiddleware = (error: Error, req: Request, res: Response<BasicR
         });
     }
 
-    Sentry.captureException(error);
-    logger.error(error.message, {
-        name: error.name,
-        stack: error.stack
-    });
 
     if (error.message.toLowerCase().includes("csrf")) {
         return res.status(403).json({
@@ -44,6 +39,12 @@ export const errorMiddleware = (error: Error, req: Request, res: Response<BasicR
             message: "CSRF token mismatch"
         });
     }
+
+    Sentry.captureException(error);
+    logger.error(error.message, {
+        name: error.name,
+        stack: error.stack
+    });
 
     return res.status(500).json({
         ...defaultResponse,
