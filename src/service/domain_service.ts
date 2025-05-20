@@ -90,7 +90,6 @@ export class DomainServices {
         const userId = header["x-control-user"];
         const id = uuidv4();
 
-        // Remove protocol from domain
         let domainOnly = request.domain;
 
         // Remove trailing slashes from domain
