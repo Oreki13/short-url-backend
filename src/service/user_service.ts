@@ -1,4 +1,4 @@
-import {Pageable} from "../model/page";
+import { Pageable } from "../model/page";
 import {
     toUserGetAllResponse,
     UserCreateRequest,
@@ -6,11 +6,11 @@ import {
     UserGetAllRequest,
     UserIdRequest
 } from "../model/user_model";
-import {Validation} from "../validation/validation";
-import {ShortLinkValidation} from "../validation/short_link_validation";
-import {prismaClient} from "../application/database";
-import {ResponseError} from "../error/response_error";
-import {UserValidation} from "../validation/user_validation";
+import { Validation } from "../validation/validation";
+import { ShortLinkValidation } from "../validation/short_link_validation";
+import { prismaClient } from "../application/database";
+import { ResponseError } from "../error/response_error";
+import { UserValidation } from "../validation/user_validation";
 import bcrypt from "bcrypt";
 
 export class UserService {
@@ -50,6 +50,14 @@ export class UserService {
                 id: true,
                 name: true,
                 email: true,
+                domain: {
+                    select: {
+                        domain: true,
+                    },
+                    where: {
+                        is_deleted: 0,
+                    }
+                },
                 role: {
                     select: {
                         name: true,
@@ -135,7 +143,7 @@ export class UserService {
     }
 
     static async deleteUser(requestBody: UserIdRequest): Promise<string> {
-        const {id}: UserIdRequest = Validation.validate(UserValidation.IDUSER, requestBody);
+        const { id }: UserIdRequest = Validation.validate(UserValidation.IDUSER, requestBody);
 
         const findUser = await prismaClient.user.findUnique({
             where: {
@@ -161,7 +169,7 @@ export class UserService {
     }
 
     static async findUserById(requestBody: UserIdRequest): Promise<UserDetail> {
-        const {id}: UserIdRequest = Validation.validate(UserValidation.IDUSER, requestBody);
+        const { id }: UserIdRequest = Validation.validate(UserValidation.IDUSER, requestBody);
 
         const findUser = await prismaClient.user.findUnique({
             where: {

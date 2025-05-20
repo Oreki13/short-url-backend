@@ -54,6 +54,7 @@ export class ShortLinkServices {
                 title: true,
                 path: true,
                 count_clicks: true,
+
                 createdAt: true,
                 destination: true,
                 updatedAt: true,
@@ -61,6 +62,15 @@ export class ShortLinkServices {
                     select: {
                         id: true,
                         name: true,
+                        domain: {
+                            select: {
+                                domain: true,
+                                is_default: true
+                            },
+                            where: {
+                                is_deleted: 0,
+                            }
+                        }
                     }
                 },
                 is_deleted: false

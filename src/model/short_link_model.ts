@@ -21,41 +21,41 @@ export type ShortLinkGetAllResponse = {
     updatedAt: Date,
 }
 
-export const toShortLinkGetAllResponse = (data: GetFindResult<Prisma.$DataUrlPayload<DefaultArgs>, {
-    take: number;
-    select: {
-        createdAt: boolean;
-        path: boolean;
-        destination: boolean;
-        id: boolean;
-        count_clicks: boolean;
-        title: boolean;
-        user: { select: { name: string; id: boolean } };
-        updatedAt: boolean
-    };
-    orderBy: { createdAt: string };
-    skip: number;
-    where: { is_deleted: number; user_id: string }
-}, GetFindResult<any, any, any>>): GetFindResult<Prisma.$DataUrlPayload<DefaultArgs>, {
-    take: number;
-    select: {
-        createdAt: boolean;
-        path: boolean;
-        destination: boolean;
-        id: boolean;
-        count_clicks: boolean;
-        title: boolean;
-        user: { select: { name: string; id: boolean } };
-        updatedAt: boolean
-    };
-    orderBy: { createdAt: string };
-    skip: number;
-    where: { is_deleted: number; user_id: string }
-}, any> & { short_url: string } => {
-    const domain = process.env.DOMAIN_SHORT || 'http://localhost:3001/';
+export const toShortLinkGetAllResponse = (data: {
+    id: string;
+    title: string;
+    path: string;
+    count_clicks: number;
+    destination: string;
+    createdAt: Date;
+    updatedAt: Date;
+    user: {
+        id: string;
+        name: string;
+        domain: {
+            domain: string;
+            is_default: number;
+        }[];
+    }
+}): ShortLinkGetAllResponse => {
+    const defaultDomain = process.env.DOMAIN_SHORT || 'http://localhost:3001/';
+    const domainPrefix = data.user.domain?.length > 0
+        ? data.user.domain.find(d => d.is_default === 1)?.domain || defaultDomain
+        : defaultDomain;
+
     return {
-        ...data,
-        short_url: `${domain}/${data.path}`
+        id: data.id,
+        title: data.title,
+        path: data.path,
+        count_clicks: data.count_clicks,
+        destination: data.destination,
+        short_url: `${domainPrefix}/${data.path}`,
+        user: {
+            id: data.user.id,
+            name: data.user.name,
+        },
+        createdAt: data.createdAt,
+        updatedAt: data.updatedAt
     };
 }
 

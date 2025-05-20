@@ -136,12 +136,17 @@ describe("POST /api/v1/user/create", () => {
     })
 
     it("Should be error with no header", async () => {
+        const { id, csrfToken, cookie } = await AuthUserTest.login('user@mail.com');
         const response = await supertest(web)
             .post("/api/v1/user/create")
+            .set("authorization", "")
+            .set("x-control-user", id)
+            .set("X-CSRF-Token", csrfToken)
+            .set("Cookie", cookie)
 
         logger.debug(response.body);
-        expect(response.status).toBe(403);
-        expect(response.body.code).toBe("CSRF_ERROR");
+        expect(response.status).toBe(401);
+        expect(response.body.code).toBe("UNAUTHORIZED");
     })
 
     it("Should be error because login as user", async () => {

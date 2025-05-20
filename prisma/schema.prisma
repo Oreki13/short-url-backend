@@ -22,6 +22,7 @@ model User {
   updatedAt  DateTime  @updatedAt @map(name: "updated_at")
   DataUrl    DataUrl[]
   tokens     Token[]
+  domain     Domain[]
 
   @@map(name: "users")
 }
@@ -62,4 +63,17 @@ model Token {
   updatedAt     DateTime @updatedAt @map(name: "updated_at")
 
   @@map(name: "tokens")
+}
+
+model Domain {
+  id         String   @id @unique @default(uuid())
+  domain     String   @unique
+  user_id    String
+  user       User     @relation(fields: [user_id], references: [id])
+  is_default Int
+  is_deleted Int
+  createdAt  DateTime @default(now()) @map(name: "created_at")
+  updatedAt  DateTime @updatedAt @map(name: "updated_at")
+
+  @@map(name: "domains")
 }
