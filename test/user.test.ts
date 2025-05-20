@@ -286,8 +286,8 @@ describe("POST /api/v1/user/create", () => {
             .set("X-CSRF-Token", csrfToken)
             .set("Cookie", cookie)
             .send({
-                name: "test",
-                email: "test@example.com",
+                name: "testxx",
+                email: "testxx@example.com",
                 password: "123",
                 role_id: "xxx!@1@"
             })
