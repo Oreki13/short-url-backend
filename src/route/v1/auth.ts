@@ -1,8 +1,12 @@
 import express from 'express'
 import AuthController from '../../controller/auth';
 import { authLimiter } from '../../middleware/auth_throttle';
+import { authActivityMiddleware } from '../../middleware/auth_activity_middleware';
 
 const router = express.Router();
+
+// Apply auth activity middleware to all auth routes
+router.use(authActivityMiddleware);
 
 // Login dan refresh-token sudah dikecualikan dari CSRF di web.ts
 router.post('/login', authLimiter, AuthController.login)

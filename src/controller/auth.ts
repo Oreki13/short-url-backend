@@ -4,6 +4,7 @@ import { HeaderAuthRequest, LoginRequest, LoginResponse, RefreshTokenRequest, Re
 import { Auth_service } from "../service/auth_service";
 import { ResponseError } from "../error/response_error";
 import jwt from "jsonwebtoken";
+import { ActivityLogger } from "../helper/activity_logger";
 
 
 class AuthController {
@@ -14,6 +15,18 @@ class AuthController {
             const userAgent = req.headers['user-agent'] || '';
 
             const response: LoginResponse = await Auth_service.login(request, ipAddress, userAgent, res)
+
+            // Extract user ID from the token
+            try {
+                const secret = process.env.SECRET_KEY;
+                const decoded: any = jwt.verify(response.access_token, secret!, { algorithms: ['HS256'] });
+
+                // Log the login activity
+                await ActivityLogger.logLogin(decoded.id, req);
+            } catch (error) {
+                // Just log the error but continue with login response
+                console.error('Failed to log login activity:', error);
+            }
 
             res.status(200).json({
                 ...defaultResponse,
@@ -69,6 +82,26 @@ class AuthController {
                 ...req.body as RevokeTokenRequest,
                 cookies: req.cookies // Tambahkan cookies
             };
+
+            // Get user ID from token
+            const authorization = req.headers.authorization;
+            let userId: string;
+
+            if (authorization) {
+                const token = authorization.split('Bearer')[1]?.trim();
+                const secret = process.env.SECRET_KEY;
+                const decoded: any = jwt.verify(token, secret!, { algorithms: ['HS256'] });
+                userId = decoded.id;
+
+                // Log token revocation activity
+                try {
+                    await ActivityLogger.logTokenRevoke(userId, req);
+                } catch (error) {
+                    // Just log the error but continue with token revocation
+                    console.error('Failed to log token revocation activity:', error);
+                }
+            }
+
             const response: BasicResponse = await Auth_service.revokeToken(request, res)
 
             res.status(200).json({
@@ -100,6 +133,14 @@ class AuthController {
                 userId = decoded.id;
             } else {
                 throw new ResponseError(401, "UNAUTHORIZED", "No authorization found");
+            }
+
+            // Log the logout activity before actually performing logout
+            try {
+                await ActivityLogger.logLogout(userId, req);
+            } catch (error) {
+                // Just log the error but continue with logout
+                console.error('Failed to log logout activity:', error);
             }
 
             const response: BasicResponse = await Auth_service.logout(userId, res);

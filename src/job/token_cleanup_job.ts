@@ -2,6 +2,7 @@ import { CronJob } from 'cron';
 import { prismaClient } from '../application/database';
 import { logger } from '../application/logger';
 import { Sentry, SentryCore } from '../application/sentry';
+import { UserActivityService } from '../service/user_activity_service';
 
 // State variables for monitoring
 let lastRunTime = new Date(0);
@@ -52,6 +53,41 @@ export function setupTokenCleanup() {
             });
 
 
+
+            // First get information about tokens that will be deleted for logging purposes
+            const expiredTokens = await prismaClient.token.findMany({
+                where: {
+                    OR: [
+                        { expires_at: { lt: new Date() } }, // Expired tokens
+                        { is_revoked: true } // Revoked tokens
+                    ]
+                },
+                include: {
+                    user: {
+                        select: {
+                            id: true
+                        }
+                    }
+                }
+            });
+
+            // Log system token revocation for each user
+            for (const token of expiredTokens) {
+                try {
+                    await UserActivityService.logActivity(
+                        token.user_id,
+                        "TOKEN_REVOKE",
+                        "System automatically removed expired or revoked token",
+                        undefined,  // IP address (not available in background job)
+                        undefined,  // User agent (not available in background job)
+                        token.id,   // Resource ID (token ID)
+                        "Token"     // Resource type
+                    );
+                } catch (error) {
+                    // Log error but continue with cleanup
+                    logger.error(`Failed to log token cleanup activity for token ${token.id}:`, error);
+                }
+            }
 
             const result = await prismaClient.token.deleteMany({
                 where: {
