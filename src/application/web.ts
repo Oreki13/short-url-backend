@@ -109,7 +109,7 @@ web.use((req, res, next) => {
         if (requestOrigin && allowedOrigins.includes(requestOrigin)) {
             res.header('Access-Control-Allow-Origin', requestOrigin);
         } else {
-            res.header('Access-Control-Allow-Origin', 'null'); // Explicitly reject invalid origins
+            return res.status(403).end(); // Reject invalid origins with 403 Forbidden
         }
         res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH,OPTIONS');
         res.header('Access-Control-Allow-Headers', [
