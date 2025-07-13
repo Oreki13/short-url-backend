@@ -18,6 +18,11 @@ const AUDITED_ROUTES = [
 ];
 
 export const auditLogMiddleware = (req: Request, res: Response, next: NextFunction) => {
+    // Skip audit logging for OPTIONS requests (CORS preflight)
+    if (req.method === 'OPTIONS') {
+        return next();
+    }
+
     const userReq = req as UserRequest;
     const startTime = Date.now();
     const url = req.originalUrl;

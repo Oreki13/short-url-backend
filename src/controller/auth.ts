@@ -154,6 +154,22 @@ class AuthController {
             next(e);
         }
     }
+
+    static async getCsrfToken(req: Request, res: Response<BasicResponse>, next: NextFunction) {
+        try {
+            // Generate CSRF token yang sudah di-handle oleh lusca.csrf middleware
+            res.status(200).json({
+                status: "OK",
+                code: null,
+                message: "CSRF token generated successfully",
+                data: {
+                    token: (req as any).csrfToken?.() || null
+                }
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 export default AuthController

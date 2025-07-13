@@ -9,6 +9,7 @@ const router = express.Router();
 router.use(authActivityMiddleware);
 
 // Login dan refresh-token sudah dikecualikan dari CSRF di web.ts
+router.get('/csrf-token', AuthController.getCsrfToken) // Endpoint untuk mendapatkan CSRF token
 router.post('/login', authLimiter, AuthController.login)
 router.get('/verify', AuthController.verify)
 router.post('/refresh-token', authLimiter, AuthController.refreshToken)

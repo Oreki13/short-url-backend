@@ -91,6 +91,21 @@ describe('Auth API', () => {
             where: { user_id: testUser.id }
         });
 
+        // Delete all user activities for the test user
+        await prismaClient.userActivity.deleteMany({
+            where: { user_id: testUser.id }
+        });
+
+        // Delete all data URLs for the test user
+        await prismaClient.dataUrl.deleteMany({
+            where: { user_id: testUser.id }
+        });
+
+        // Delete all domains for the test user
+        await prismaClient.domain.deleteMany({
+            where: { user_id: testUser.id }
+        });
+
         // Delete test user
         await prismaClient.user.delete({
             where: { id: testUser.id }
