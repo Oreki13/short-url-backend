@@ -9,6 +9,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { BasicResponse, defaultResponse } from "../model/basic_response_model";
 import { generateJwt } from "../helper/generate_jwt";
 import { Request, Response } from 'express';
+import { UserActivityService } from "./user_activity_service";
 
 export class Auth_service {
     static async login(request: LoginRequest, ipAddress: string, userAgent: string, res: Response): Promise<LoginResponse> {
@@ -88,6 +89,15 @@ export class Auth_service {
         // Set secure cookies
         this.setTokenCookies(res, access_token, refreshToken, expires_in);
 
+        // Log login activity
+        await UserActivityService.logActivity(
+            findUser.id,
+            "LOGIN",
+            "User logged in successfully",
+            ipAddress,
+            userAgent
+        );
+
         return toLoginResponse(access_token, refreshToken, expires_in);
     }
 
@@ -160,6 +170,13 @@ export class Auth_service {
         // Set new cookies
         this.setTokenCookies(res, access_token, refreshTokenValue, expires_in);
 
+        // Log token refresh activity
+        await UserActivityService.logActivity(
+            token.user.id,
+            "TOKEN_REFRESH",
+            "User refreshed token"
+        );
+
         return {
             access_token,
             expires_in
@@ -219,6 +236,20 @@ export class Auth_service {
                 is_revoked: true
             }
         });
+
+        // Log logout activity
+        try {
+            await UserActivityService.logActivity(
+                userId,
+                "LOGOUT",
+                "User logged out successfully",
+                undefined,  // IP address will be undefined as we don't have request object here
+                undefined   // User agent will be undefined as we don't have request object here
+            );
+        } catch (error) {
+            // Log error but don't interrupt the flow
+            console.error("Failed to log logout activity:", error);
+        }
 
         // Clear cookies
         this.clearTokenCookies(res);

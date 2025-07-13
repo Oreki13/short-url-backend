@@ -11,18 +11,19 @@ datasource db {
 }
 
 model User {
-  id         String    @id @unique @default(uuid())
-  name       String    @db.VarChar(100)
-  email      String    @unique
-  password   String    @db.VarChar(255)
-  role       RoleUser  @relation(fields: [role_id], references: [id])
+  id         String         @id @unique @default(uuid())
+  name       String         @db.VarChar(100)
+  email      String         @unique
+  password   String         @db.VarChar(255)
+  role       RoleUser       @relation(fields: [role_id], references: [id])
   role_id    String
   is_deleted Int
-  createdAt  DateTime  @default(now()) @map(name: "created_at")
-  updatedAt  DateTime  @updatedAt @map(name: "updated_at")
+  createdAt  DateTime       @default(now()) @map(name: "created_at")
+  updatedAt  DateTime       @updatedAt @map(name: "updated_at")
   DataUrl    DataUrl[]
   tokens     Token[]
   domain     Domain[]
+  activities UserActivity[]
 
   @@map(name: "users")
 }
@@ -76,4 +77,19 @@ model Domain {
   updatedAt  DateTime @updatedAt @map(name: "updated_at")
 
   @@map(name: "domains")
+}
+
+model UserActivity {
+  id            String   @id @unique @default(uuid())
+  user_id       String
+  user          User     @relation(fields: [user_id], references: [id])
+  activity_type String   @db.VarChar(100)
+  description   String?  @db.Text
+  ip_address    String?  @db.VarChar(100)
+  user_agent    String?  @db.Text
+  resource_id   String?  @db.VarChar(100)
+  resource_type String?  @db.VarChar(100)
+  createdAt     DateTime @default(now()) @map(name: "created_at")
+
+  @@map(name: "user_activities")
 }

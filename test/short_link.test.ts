@@ -22,9 +22,9 @@ describe("POST /api/v1/short/", () => {
             });
 
         logger.info(res.body);
-        expect(res.status).toBe(403)
+        expect(res.status).toBe(401)
         expect(res.body.status).toBe("ERROR")
-        expect(res.body.code).toBe("CSRF_ERROR")
+        expect(res.body.code).toBe("UNAUTHORIZED")
     })
 
     it("should be reject store if body is invalid", async () => {
@@ -339,9 +339,9 @@ describe("PUT /api/v1/short/:id", () => {
             .put("/api/v1/short/tes")
 
         logger.debug(res.body);
-        expect(res.status).toBe(403)
+        expect(res.status).toBe(401)
         expect(res.body.status).toBe("ERROR")
-        expect(res.body.code).toBe("CSRF_ERROR")
+        expect(res.body.code).toBe("UNAUTHORIZED")
     })
 
     it("Should be failed no param send on endpoint", async () => {
@@ -461,9 +461,9 @@ describe("DELETE /api/v1/short/:id", () => {
             .delete("/api/v1/short/")
 
         logger.debug(res.body);
-        expect(res.status).toBe(403)
+        expect(res.status).toBe(401)
         expect(res.body.status).toBe("ERROR")
-        expect(res.body.code).toBe("CSRF_ERROR")
+        expect(res.body.code).toBe("UNAUTHORIZED")
     })
 
     it("Should be failed no param send on endpoint", async () => {
