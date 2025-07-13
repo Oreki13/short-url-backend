@@ -12,15 +12,18 @@ export const enhancedCorsMiddleware = (req: Request, res: Response, next: NextFu
 
     // Handle development origins more permissively
     if (process.env.NODE_ENV === 'development') {
-        // Allow all localhost and 127.0.0.1 origins in development
-        if (origin && (
-            origin.startsWith('http://localhost') ||
-            origin.startsWith('http://127.0.0.1') ||
-            origin.startsWith('http://localhost:3000') ||
-            origin.startsWith('http://127.0.0.1:3000') ||
-            origin.startsWith('https://localhost') ||
-            origin.startsWith('https://127.0.0.1')
-        )) {
+        // Define a whitelist of allowed localhost origins for development
+        const allowedOrigins = new Set([
+            'http://localhost',
+            'http://127.0.0.1',
+            'http://localhost:3000',
+            'http://127.0.0.1:3000',
+            'https://localhost',
+            'https://127.0.0.1'
+        ]);
+
+        // Check if the origin is in the whitelist
+        if (origin && allowedOrigins.has(origin)) {
             res.setHeader('Access-Control-Allow-Origin', origin);
             res.setHeader('Access-Control-Allow-Credentials', 'true');
         }
