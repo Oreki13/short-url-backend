@@ -98,8 +98,19 @@ web.use(cors({
 // 2. Perbaiki handling OPTIONS request
 web.use((req, res, next) => {
     if (req.method === 'OPTIONS') {
-        // Set headers yang diperlukan untuk pre-flight
-        res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+        // Set headers required for pre-flight, including sanitized CORS origin validation
+        const allowedOrigins = process.env.ALLOWED_ORIGINS ?
+            process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim()) :
+            process.env.NODE_ENV === 'development' ?
+                ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:3001'] :
+                []; // Require explicit ALLOWED_ORIGINS in production
+        
+        const requestOrigin = req.headers.origin;
+        if (requestOrigin && allowedOrigins.includes(requestOrigin)) {
+            res.header('Access-Control-Allow-Origin', requestOrigin);
+        } else {
+            res.header('Access-Control-Allow-Origin', 'null'); // Explicitly reject invalid origins
+        }
         res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH,OPTIONS');
         res.header('Access-Control-Allow-Headers', [
             'Origin',
