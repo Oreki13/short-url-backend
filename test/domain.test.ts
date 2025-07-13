@@ -9,7 +9,9 @@ import { v4 as uuidv4 } from 'uuid';
 class DomainTest {
     static async addTestDomain(userId: string): Promise<{ id: string, domain: string }> {
         const id = uuidv4();
-        const domain = `test-domain-${Date.now()}.com`;
+        // Add random string to ensure uniqueness even when called in quick succession
+        const randomSuffix = Math.random().toString(36).substring(2, 8);
+        const domain = `test-domain-${Date.now()}-${randomSuffix}.com`;
 
         await prismaClient.domain.create({
             data: {
@@ -38,7 +40,11 @@ class DomainTest {
 }
 
 describe('Domain API', () => {
-    // Clean up test domains after all tests
+    // Clean up test domains before and after all tests
+    beforeAll(async () => {
+        await DomainTest.deleteTestDomains();
+    });
+
     afterAll(async () => {
         await DomainTest.deleteTestDomains();
     });
@@ -147,7 +153,8 @@ describe('Domain API', () => {
         it('should successfully store a domain', async () => {
             const { id, token, csrfToken, cookie } = await AuthUserTest.login('superadmin@mail.com');
 
-            const domainName = `https://test-domain-${Date.now()}.com`;
+            const randomSuffix = Math.random().toString(36).substring(2, 8);
+            const domainName = `https://test-domain-${Date.now()}-${randomSuffix}.com`;
             const response = await supertest(web)
                 .post('/api/v1/domain/')
                 .set('authorization', 'Bearer ' + token)
@@ -171,7 +178,8 @@ describe('Domain API', () => {
             const { id, token, csrfToken, cookie } = await AuthUserTest.login('superadmin@mail.com');
 
             // First, add a domain
-            const domainName = `https://test-domain-duplicate-${Date.now()}.com`;
+            const randomSuffix = Math.random().toString(36).substring(2, 8);
+            const domainName = `https://test-domain-duplicate-${Date.now()}-${randomSuffix}.com`;
             await supertest(web)
                 .post('/api/v1/domain/')
                 .set('authorization', 'Bearer ' + token)
@@ -203,7 +211,8 @@ describe('Domain API', () => {
         it('should set a domain as default', async () => {
             const { id, token, csrfToken, cookie } = await AuthUserTest.login('superadmin@mail.com');
 
-            const domainName = `https://test-default-domain-${Date.now()}.com`;
+            const randomSuffix = Math.random().toString(36).substring(2, 8);
+            const domainName = `https://test-default-domain-${Date.now()}-${randomSuffix}.com`;
             const response = await supertest(web)
                 .post('/api/v1/domain/')
                 .set('authorization', 'Bearer ' + token)
@@ -280,7 +289,8 @@ describe('Domain API', () => {
             const { id: domainId } = await DomainTest.addTestDomain(userId);
 
             // Update the domain
-            const newDomainName = `https://updated-test-domain-${Date.now()}.com`;
+            const randomSuffix = Math.random().toString(36).substring(2, 8);
+            const newDomainName = `https://updated-test-domain-${Date.now()}-${randomSuffix}.com`;
             const response = await supertest(web)
                 .put(`/api/v1/domain/${domainId}`)
                 .set('authorization', 'Bearer ' + token)

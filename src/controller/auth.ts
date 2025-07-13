@@ -122,15 +122,39 @@ class AuthController {
 
             if (authorization) {
                 const token = authorization.split('Bearer')[1]?.trim();
-                const secret = process.env.SECRET_KEY;
-                const decoded: any = jwt.verify(token, secret!, { algorithms: ['HS256'] });
-                userId = decoded.id;
+                if (!token) {
+                    throw new ResponseError(401, "UNAUTHORIZED", "Invalid authorization header format");
+                }
+
+                try {
+                    const secret = process.env.SECRET_KEY;
+                    const decoded: any = jwt.verify(token, secret!, { algorithms: ['HS256'] });
+                    userId = decoded.id;
+                } catch (jwtError: any) {
+                    if (jwtError.name === 'JsonWebTokenError') {
+                        throw new ResponseError(403, "INVALID_TOKEN", "Invalid or malformed token");
+                    } else if (jwtError.name === 'TokenExpiredError') {
+                        throw new ResponseError(403, "TOKEN_EXPIRED", "Token has expired");
+                    } else {
+                        throw new ResponseError(403, "TOKEN_ERROR", "Token verification failed");
+                    }
+                }
             } else if (req.cookies?.accessToken) {
                 // Ambil dari cookie jika tidak ada di header
                 const token = req.cookies.accessToken;
-                const secret = process.env.SECRET_KEY;
-                const decoded: any = jwt.verify(token, secret!, { algorithms: ['HS256'] });
-                userId = decoded.id;
+                try {
+                    const secret = process.env.SECRET_KEY;
+                    const decoded: any = jwt.verify(token, secret!, { algorithms: ['HS256'] });
+                    userId = decoded.id;
+                } catch (jwtError: any) {
+                    if (jwtError.name === 'JsonWebTokenError') {
+                        throw new ResponseError(403, "INVALID_TOKEN", "Invalid or malformed token");
+                    } else if (jwtError.name === 'TokenExpiredError') {
+                        throw new ResponseError(403, "TOKEN_EXPIRED", "Token has expired");
+                    } else {
+                        throw new ResponseError(403, "TOKEN_ERROR", "Token verification failed");
+                    }
+                }
             } else {
                 throw new ResponseError(401, "UNAUTHORIZED", "No authorization found");
             }

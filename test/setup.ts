@@ -23,6 +23,11 @@ dotenv.config({
 // Make sure we're using test environment
 process.env.NODE_ENV = 'test';
 
+// Ensure ALLOWED_ORIGINS is set for testing
+if (!process.env.ALLOWED_ORIGINS) {
+    process.env.ALLOWED_ORIGINS = 'http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000';
+}
+
 // Ensure SECRET_KEY is set for JWT
 if (!process.env.SECRET_KEY) {
     process.env.SECRET_KEY = 'test-secret-key';

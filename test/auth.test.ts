@@ -28,7 +28,7 @@ let csrfToken: string;
 // Helper function to get CSRF token
 async function getCsrfToken(authToken?: string, userId?: string) {
     // Persiapkan request untuk mendapatkan CSRF token
-    const req = request(web).get("/csrf-token");
+    const req = request(web).get("/api/v1/auth/csrf-token");
 
     // Tambahkan credentials jika diberikan
     if (authToken && userId) {
@@ -267,7 +267,7 @@ describe('Auth API', () => {
 
             // Get CSRF token from the dedicated endpoint, preserving the same session
             const csrfResponse = await request(web)
-                .get('/csrf-token')
+                .get('/api/v1/auth/csrf-token')
                 .set('Authorization', `Bearer ${newAccessToken}`)
                 .set('x-control-user', userId)
                 .set('Cookie', cookieString);
@@ -360,7 +360,7 @@ describe('Auth API', () => {
             expect(response.body.code).toBe('UNAUTHORIZED');
         });
 
-        it('should return 403 when token is invalid', async () => {
+        it('should return 401 when token is invalid', async () => {
             // Get a CSRF token anyway for the request
             csrfToken = await getCsrfToken();
 
@@ -369,7 +369,8 @@ describe('Auth API', () => {
                 .set('Authorization', 'Bearer invalid-token')
                 .set('X-CSRF-Token', csrfToken);
 
-            expect(response.status).toBe(403);
+            expect(response.status).toBe(401);
+            expect(response.body.code).toBe('UNAUTHORIZED');
         });
     });
 

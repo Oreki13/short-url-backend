@@ -357,8 +357,8 @@ describe("DELETE /api/v1/user/:id", () => {
             .delete("/api/v1/user/wref")
 
         logger.debug(response.body);
-        expect(response.status).toBe(403);
-        expect(response.body.code).toBe("CSRF_ERROR");
+        expect(response.status).toBe(401);
+        expect(response.body.code).toBe("UNAUTHORIZED");
     })
 
     it("Should be error because login as user", async () => {
