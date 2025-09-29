@@ -1,6 +1,14 @@
 import { prismaClient } from "../application/database";
 import { ResponseError } from "../error/response_error";
-import { ActivityTypeValue, UserActivityRequest, UserActivityResponse } from "../model/user_activity_model";
+import { Prisma } from "@prisma/client";
+import { Pageable } from "../model/page";
+import {
+    ActivityTypeValue,
+    UserActivityListQuery,
+    UserActivityListRequest,
+    UserActivityRequest,
+    UserActivityResponse
+} from "../model/user_activity_model";
 import { Validation } from "../validation/validation";
 import { UserActivityValidation } from "../validation/user_activity_validation";
 
@@ -44,6 +52,64 @@ export class UserActivityService {
             }
             throw new ResponseError(500, "ERROR", "Failed to log user activity");
         }
+    }
+
+    static async getActivities(requestQuery: UserActivityListRequest): Promise<Pageable<UserActivityResponse>> {
+        const {
+            page,
+            limit,
+            sort,
+            user_id,
+            activity_type,
+            search,
+        } = Validation.validate(UserActivityValidation.GET_LIST, requestQuery) as UserActivityListQuery;
+
+        const pageNumber = Math.max(Number.parseInt(page, 10) || 1, 1);
+        const limitNumber = Math.max(Number.parseInt(limit, 10) || 10, 1);
+        const skip = (pageNumber - 1) * limitNumber;
+
+        const whereClause: Prisma.UserActivityWhereInput = {};
+
+        if (user_id) {
+            whereClause.user_id = user_id;
+        }
+
+        if (activity_type) {
+            whereClause.activity_type = activity_type;
+        }
+
+        const keyword = search.trim();
+
+        if (keyword) {
+            whereClause.OR = [
+                { description: { contains: keyword, mode: "insensitive" } },
+                { resource_type: { contains: keyword, mode: "insensitive" } },
+                { resource_id: { contains: keyword, mode: "insensitive" } },
+                { ip_address: { contains: keyword, mode: "insensitive" } },
+            ];
+        }
+
+        const totalData = await prismaClient.userActivity.count({ where: whereClause });
+        const activities = await prismaClient.userActivity.findMany({
+            where: whereClause,
+            orderBy: {
+                createdAt: sort,
+            },
+            skip,
+            take: limitNumber,
+        });
+
+        const data = activities.map(activity => this.toUserActivityResponse(activity));
+
+        return {
+            data,
+            paging: {
+                current_page: pageNumber,
+                total_page: limitNumber > 0 ? Math.ceil(totalData / limitNumber) : 0,
+                size: limitNumber,
+                total_data: totalData,
+            },
+        };
     }
 
     /**

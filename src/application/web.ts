@@ -134,6 +134,7 @@ web.use((req, res, next) => {
     // Endpoint yang tidak memerlukan CSRF protection
     const csrfExemptPaths = [
         '/api/v1/auth/login',
+        '/api/v1/auth/create',
         '/api/v1/auth/refresh-token',
         '/api/v1/auth/csrf-token'
     ];

@@ -29,6 +29,24 @@ export interface UserActivityRequest {
     resource_type?: string;
 }
 
+export interface UserActivityListRequest {
+    page?: string;
+    limit?: string;
+    sort?: "asc" | "desc";
+    user_id?: string;
+    activity_type?: ActivityTypeValue;
+    search?: string;
+}
+
+export type UserActivityListQuery = {
+    page: string;
+    limit: string;
+    sort: "asc" | "desc";
+    user_id?: string;
+    activity_type?: ActivityTypeValue;
+    search: string;
+};
+
 export interface UserActivityResponse {
     id: string;
     user_id: string;

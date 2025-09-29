@@ -4,6 +4,7 @@ import { authLimiter } from '../../middleware/auth_throttle';
 import { authMiddleware } from "../../middleware/auth_middleware";
 import { authActivityMiddleware } from '../../middleware/auth_activity_middleware';
 import { UserRequest } from '../../type/user_request';
+import { UserController } from '../../controller/user';
 
 const router = express.Router();
 
@@ -17,5 +18,6 @@ router.get('/verify', AuthController.verify)
 router.post('/refresh-token', authLimiter, AuthController.refreshToken)
 router.post('/revoke-token', AuthController.revokeToken)
 router.post('/logout', (req: Request, res: Response, next: NextFunction) => authMiddleware(<UserRequest>req, res, next), AuthController.logout)
+router.post("/create", authLimiter, (req: Request, res: Response, next: NextFunction) => UserController.createUser(<UserRequest>req, res, next))
 
 export default router
