@@ -4,6 +4,7 @@ import { UserActivityService } from "../service/user_activity_service";
 import { UserRequest } from "../type/user_request";
 import { Validation } from "../validation/validation";
 import { UserActivityValidation } from "../validation/user_activity_validation";
+import { UserActivityListRequest } from "../model/user_activity_model";
 
 class UserActivityController {
     /**
@@ -31,6 +32,31 @@ class UserActivityController {
                 ...defaultResponse,
                 code: "ACTIVITY_LOGGED",
                 message: "Activity logged successfully"
+            });
+        } catch (e) {
+            next(e);
+        }
+    }
+
+    static async getActivityLogs(req: Request, res: Response<BasicResponse>, next: NextFunction) {
+        try {
+            const userReq = req as UserRequest;
+            if (!userReq.id || !userReq.name) {
+                return res.status(401).json({
+                    status: "ERROR",
+                    data: null,
+                    code: "UNAUTHORIZED",
+                    message: null,
+                });
+            }
+
+            const requestQuery = req.query as unknown as UserActivityListRequest;
+            const response = await UserActivityService.getActivities(requestQuery);
+
+            res.status(200).json({
+                ...defaultResponse,
+                code: "SUCCESS",
+                data: response,
             });
         } catch (e) {
             next(e);

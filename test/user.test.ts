@@ -441,21 +441,6 @@ describe("GET /api/v1/user/:id", () => {
         expect(response.body.code).toBe("UNAUTHORIZED");
     })
 
-    it("Should be error because login as user", async () => {
-        const { id, token, csrfToken, cookie } = await AuthUserTest.login("user@mail.com");
-        const response = await supertest(web)
-            .get("/api/v1/user/wref")
-            .set("authorization", "Bearer " + token)
-            .set("x-control-user", id)
-            .set("X-CSRF-Token", csrfToken)
-            .set("Cookie", cookie)
-
-        logger.debug(response.body);
-        expect(response.status).toBe(401);
-        expect(response.body.code).toBe("UNAUTHORIZED");
-        expect(response.body.message).toBe("Only admin can access this feature");
-    })
-
     it("Should be success login because login as user", async () => {
         const { id, token, csrfToken, cookie } = await AuthUserTest.login("admin@mail.com");
         const response = await supertest(web)

@@ -1,5 +1,5 @@
-import {DefaultArgs, GetFindResult} from "prisma/prisma-client/runtime/library";
-import {Prisma} from "@prisma/client";
+import { DefaultArgs, GetFindResult } from "prisma/prisma-client/runtime/library";
+import { Prisma } from "@prisma/client";
 
 export type UserNameAndID = {
     id: string,
@@ -32,7 +32,7 @@ export type UserCreateRequest = {
     name: string,
     email: string,
     password: string,
-    role_id: string,
+    role_id: string | null,
 }
 
 export const toUserGetAllResponse = (data: GetFindResult<Prisma.$UserPayload<DefaultArgs>, {

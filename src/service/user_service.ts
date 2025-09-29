@@ -106,13 +106,27 @@ export class UserService {
             throw new ResponseError(400, "USER_ALREADY_EXISTS", "User already exists");
         }
 
-        const findRole = await prismaClient.roleUser.findUnique({
-            where: {
-                id: role_id
-            }
-        })
+        let defaultRoleId = "";
+        if (role_id === undefined || role_id === null || role_id.length === 0) {
+            const findRoleDefault = await prismaClient.roleUser.findFirst({
+                select: { id: true },
+                where: {
+                    name: "user"
+                }
+            })
 
-        if (findRole === null) {
+            defaultRoleId = findRoleDefault?.id || "";
+        } else {
+            const findRole = await prismaClient.roleUser.findUnique({
+                where: {
+                    id: role_id
+                }
+            })
+            defaultRoleId = findRole?.id || "";
+        }
+
+
+        if (defaultRoleId.length === 0) {
             throw new ResponseError(400, "ROLE_NOT_EXIST", "Role does not exist");
         }
 
@@ -124,7 +138,7 @@ export class UserService {
                 name,
                 email,
                 password: passwordHash,
-                role_id,
+                role_id: defaultRoleId,
                 is_deleted: 0
             },
             select: {
@@ -138,8 +152,6 @@ export class UserService {
                 }
             }
         })
-
-
     }
 
     static async deleteUser(requestBody: UserIdRequest): Promise<string> {
